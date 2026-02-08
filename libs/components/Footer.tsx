@@ -7,8 +7,9 @@ const Footer = () => {
       <Stack className={"footer-main"}>
         <Stack className={"container"}>
           <Box component={"div"} className={"footer-brand"}>
-            <Link href={"/"}>
-              <img src="/img/logo/logoWhite.svg" alt="MedBook" />
+            <Link href={"/"} className={"footer-brand-link"}>
+              <img src="/img/logo.png" alt="MedBook" />
+              <span className={"footer-logo-text"}>MedBook</span>
             </Link>
             <span className={"footer-tagline"}>Your health, our priority.</span>
           </Box>
@@ -27,10 +28,10 @@ const Footer = () => {
             </Link>
           </Box>
           <Box component={"div"} className={"footer-legal"}>
-            <Link href={"/privacy"}>
+            <Link href={"/cs"}>
               <div>Privacy</div>
             </Link>
-            <Link href={"/terms"}>
+            <Link href={"/cs"}>
               <div>Terms</div>
             </Link>
           </Box>
