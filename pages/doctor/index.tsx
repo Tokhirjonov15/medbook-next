@@ -1,5 +1,9 @@
-const DoctorList = () => {
-  return <div>DOCTOR LIST</div>;
+import withLayoutBasic from "@/libs/components/layout/LayoutBasic";
+import { Container } from "@mui/material";
+import { NextPage } from "next";
+
+const DoctorList: NextPage = () => {
+  return <Container>DOCTOR LIST</Container>;
 };
 
-export default DoctorList;
+export default withLayoutBasic(DoctorList);
