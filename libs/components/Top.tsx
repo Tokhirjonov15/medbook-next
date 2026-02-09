@@ -4,6 +4,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
 import { Logout } from "@mui/icons-material";
 import { useState, MouseEvent } from "react";
+import { useRouter } from "next/router";
 
 interface User {
   name: string;
@@ -19,6 +20,7 @@ interface NavbarProps {
 const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const router = useRouter();
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     if (user) {
@@ -35,6 +37,10 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
     onLogout?.();
   };
 
+  const isActive = (path: string) => {
+    return router.pathname === path;
+  };
+
   return (
     <Stack className={"navbar"}>
       <Stack className={"navbar-main"}>
@@ -47,20 +53,40 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
           </Box>
           <Box component={"div"} className={"router-box"}>
             <Link href={"/"}>
-              <div className="router-link active">Home</div>
+              <div className={`router-link ${isActive("/") ? "active" : ""}`}>
+                Home
+              </div>
             </Link>
-            <Link href={"/doctors"}>
-              <div className="router-link">Find Doctors</div>
+            <Link href={"/doctor"}>
+              <div
+                className={`router-link ${isActive("/doctor") ? "active" : ""}`}
+              >
+                Find Doctors
+              </div>
             </Link>
             <Link href={"/community"}>
-              <div className="router-link">Community</div>
+              <div
+                className={`router-link ${
+                  isActive("/community") ? "active" : ""
+                }`}
+              >
+                Community
+              </div>
             </Link>
             <Link href={"/cs"}>
-              <div className="router-link">CS</div>
+              <div className={`router-link ${isActive("/cs") ? "active" : ""}`}>
+                CS
+              </div>
             </Link>
             {user && (
               <Link href={"/my-page"}>
-                <div className="router-link">My Page</div>
+                <div
+                  className={`router-link ${
+                    isActive("/my-page") ? "active" : ""
+                  }`}
+                >
+                  My Page
+                </div>
               </Link>
             )}
           </Box>
