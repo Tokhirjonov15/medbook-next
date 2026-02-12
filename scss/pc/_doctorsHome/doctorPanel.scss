@@ -1346,6 +1346,17 @@
             background-color: #f1f5f9;
           }
         }
+
+        .doctor-settings-btn {
+          &.active {
+            color: #4361ee;
+            background-color: #e0e7ff;
+
+            &:hover {
+              background-color: #dbeafe;
+            }
+          }
+        }
       }
     }
 

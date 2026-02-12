@@ -22,6 +22,7 @@ const drawerWidth = 240;
 const withLayoutDoctor = (Component: ComponentType) => {
   return (props: object) => {
     const router = useRouter();
+    const isMyPage = router.pathname.startsWith("/_doctor/mypage");
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
       null,
     );
@@ -56,7 +57,10 @@ const withLayoutDoctor = (Component: ComponentType) => {
                 <IconButton>
                   <NotificationsIcon />
                 </IconButton>
-                <IconButton>
+                <IconButton
+                  className={`doctor-settings-btn ${isMyPage ? "active" : ""}`}
+                  onClick={() => router.push("/_doctor/mypage")}
+                >
                   <SettingsIcon />
                 </IconButton>
                 <Tooltip title="Open settings">
