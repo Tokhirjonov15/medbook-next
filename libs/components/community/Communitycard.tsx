@@ -1,6 +1,5 @@
 import React from "react";
-import { Box, Chip, IconButton, Stack, Typography } from "@mui/material";
-import Link from "next/link";
+import { Box, Chip, Stack, Typography } from "@mui/material";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -52,7 +51,10 @@ const CommunityCard = ({ article }: CommunityCardProps) => {
   };
 
   const handleCardClick = () => {
-    router.push(`/community/detail?id=${article.id}`);
+    const detailPath = router.pathname.startsWith("/_doctor/community")
+      ? "/_doctor/community/detail"
+      : "/community/detail";
+    router.push(`${detailPath}?id=${article.id}`);
   };
 
   return (

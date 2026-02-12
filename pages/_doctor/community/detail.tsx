@@ -17,7 +17,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import SendIcon from "@mui/icons-material/Send";
 import ReplyIcon from "@mui/icons-material/Reply";
-import withLayoutMain from "@/libs/components/layout/LayoutMember";
+import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 
 interface Comment {
   id: number;
@@ -42,7 +42,7 @@ interface Reply {
   likes: number;
 }
 
-const CommunityDetail: NextPage = () => {
+const DoctorCommunityDetail: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
 
@@ -53,7 +53,6 @@ const CommunityDetail: NextPage = () => {
     {},
   );
 
-  // Mock data - replace with API call
   const article = {
     id: 1,
     title: "Top 10 Heart Health Tips for 2024",
@@ -149,7 +148,6 @@ const CommunityDetail: NextPage = () => {
 
   const handleLike = () => {
     setIsLiked(!isLiked);
-    // TODO: API call to like/unlike article
   };
 
   const handleCommentSubmit = () => {
@@ -167,7 +165,6 @@ const CommunityDetail: NextPage = () => {
       };
       setComments([newComment, ...comments]);
       setCommentText("");
-      // TODO: API call to submit comment
     }
   };
 
@@ -195,7 +192,6 @@ const CommunityDetail: NextPage = () => {
 
       setReplyText({ ...replyText, [commentId]: "" });
       setShowReplyBox({ ...showReplyBox, [commentId]: false });
-      // TODO: API call to submit reply
     }
   };
 
@@ -210,7 +206,6 @@ const CommunityDetail: NextPage = () => {
     <div id="community-detail-page">
       <Stack className="detail-container">
         <Stack className="detail-content">
-          {/* Article Header */}
           <Stack className="article-header">
             <Chip
               label={article.category}
@@ -219,7 +214,6 @@ const CommunityDetail: NextPage = () => {
             />
             <Typography className="article-title">{article.title}</Typography>
 
-            {/* Author Info */}
             <Stack className="author-meta">
               <Stack className="author-section">
                 <Avatar
@@ -266,25 +260,21 @@ const CommunityDetail: NextPage = () => {
             </Stack>
           </Stack>
 
-          {/* Article Image */}
           {article.image && (
             <Box className="article-image">
               <img src={article.image} alt={article.title} />
             </Box>
           )}
 
-          {/* Article Content */}
           <Stack className="article-content">
             <div dangerouslySetInnerHTML={{ __html: article.content }} />
           </Stack>
 
-          {/* Comments Section */}
           <Stack className="comments-section">
             <Typography className="section-title">
               Comments ({comments.length})
             </Typography>
 
-            {/* Comments List */}
             <Stack className="comments-list">
               {comments.map((comment) => (
                 <Stack key={comment.id} className="comment-item">
@@ -325,7 +315,6 @@ const CommunityDetail: NextPage = () => {
                     </Button>
                   </Stack>
 
-                  {/* Reply Box */}
                   {showReplyBox[comment.id] && (
                     <Stack className="reply-box">
                       <Avatar
@@ -359,7 +348,6 @@ const CommunityDetail: NextPage = () => {
                     </Stack>
                   )}
 
-                  {/* Replies List */}
                   {comment.replies.length > 0 && (
                     <Stack className="replies-list">
                       {comment.replies.map((reply) => (
@@ -400,7 +388,6 @@ const CommunityDetail: NextPage = () => {
               ))}
             </Stack>
 
-            {/* Write Comment */}
             <Stack className="write-comment">
               <Avatar src="/img/defaultUser.svg" className="comment-avatar" />
               <TextField
@@ -431,4 +418,4 @@ const CommunityDetail: NextPage = () => {
   );
 };
 
-export default withLayoutMain(CommunityDetail);
+export default withLayoutDoctor(DoctorCommunityDetail);
