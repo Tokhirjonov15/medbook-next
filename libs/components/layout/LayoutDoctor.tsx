@@ -14,8 +14,7 @@ import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { useReactiveVar } from "@apollo/client";
-import { MemberType } from "../../enums/member.enum";
+import LogoutIcon from "@mui/icons-material/Logout";
 import DoctorMenuList from "../_doctorsHome/DoctorMenuList";
 
 const drawerWidth = 240;
@@ -165,6 +164,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
             <Box sx={{ mt: "auto", p: 2 }}>
               <Divider sx={{ mb: 2 }} />
               <MenuItem sx={{ borderRadius: 1, color: "#ef4444" }}>
+                <LogoutIcon />
                 <Typography variant="body2">Logout</Typography>
               </MenuItem>
             </Box>

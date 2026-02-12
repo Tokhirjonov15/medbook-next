@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useRouter, withRouter } from "next/router";
+import React from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import {
   List,
@@ -14,48 +14,29 @@ import ForumIcon from "@mui/icons-material/Forum";
 import PersonIcon from "@mui/icons-material/Person";
 import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
 
-const DoctorMenuList = (props: any) => {
+const DoctorMenuList = () => {
   const router = useRouter();
-  const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const pathnames = router.pathname.split("/").filter((x: string) => x);
+  const doctorSection = pathnames[1];
 
-  const {
-    router: { pathname },
-  } = props;
-
-  const pathnames = pathname.split("/").filter((x: any) => x);
-
-  /** LIFECYCLES **/
-  useEffect(() => {
-    switch (pathnames[1]) {
-      case "dashboard":
-        setActiveMenu("Dashboard");
-        break;
-      case "appointments":
-        setActiveMenu("Appointments");
-        break;
-      case "patients":
-        setActiveMenu("Patients");
-        break;
-      case "community":
-        setActiveMenu("Community");
-        break;
-      case "mypage":
-        setActiveMenu("My Page");
-        break;
-      case "cs":
-        setActiveMenu("CS");
-        break;
-      default:
-        setActiveMenu("Dashboard");
-        break;
-    }
-  }, [pathname]);
+  const activeMenu =
+    doctorSection === "appointments" || doctorSection === "appoinments"
+      ? "Appointments"
+      : doctorSection === "patients"
+        ? "Patients"
+        : doctorSection === "community"
+          ? "Community"
+          : doctorSection === "mypage"
+            ? "My Page"
+            : doctorSection === "cs"
+              ? "CS"
+              : "Dashboard";
 
   const menu_items = [
     {
       title: "Dashboard",
       icon: <DashboardIcon />,
-      url: "/_doctor/dashboard",
+      url: "/_doctor",
     },
     {
       title: "Appointments",
@@ -131,4 +112,4 @@ const DoctorMenuList = (props: any) => {
   );
 };
 
-export default withRouter(DoctorMenuList);
+export default DoctorMenuList;
