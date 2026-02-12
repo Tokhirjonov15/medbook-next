@@ -17,7 +17,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import SendIcon from "@mui/icons-material/Send";
 import ReplyIcon from "@mui/icons-material/Reply";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 interface Comment {
   id: number;

@@ -9,9 +9,9 @@ import {
 } from "@mui/material";
 import { NextPage } from "next";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
 import DoctorCard from "@/libs/components/doctors/DoctorCard";
 import Filter from "@/libs/components/doctors/Filter";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 const DoctorList: NextPage = () => {
   const [doctors, setDoctors] = useState<any[]>([

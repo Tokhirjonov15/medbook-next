@@ -17,7 +17,7 @@ import { useRouter } from "next/router";
 import ImageIcon from "@mui/icons-material/Image";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 const CommunityCreate: NextPage = () => {
   const router = useRouter();

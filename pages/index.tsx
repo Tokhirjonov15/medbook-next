@@ -2,7 +2,7 @@ import Entrance from "@/libs/components/homepage/Entrance";
 import Events from "@/libs/components/homepage/Events";
 import BrowseBySpecialization from "@/libs/components/homepage/Filter";
 import TopRatedDoctors from "@/libs/components/homepage/TopDoctors";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 import { Stack } from "@mui/material";
 import { NextPage } from "next";
 

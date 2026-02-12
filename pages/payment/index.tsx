@@ -26,7 +26,7 @@ import MoneyIcon from "@mui/icons-material/Money";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 const steps = ["Date & Time", "Details", "Payment"];
 

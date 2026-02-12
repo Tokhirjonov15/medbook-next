@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
 import { Box, Button, Pagination, Stack, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import CreateIcon from "@mui/icons-material/Create";
 import CommunityFilter from "@/libs/components/community/Filter";
 import CommunityCard from "@/libs/components/community/Communitycard";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 const CommunityList: NextPage = () => {
   const router = useRouter();

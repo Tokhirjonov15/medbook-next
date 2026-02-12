@@ -13,7 +13,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import DescriptionIcon from "@mui/icons-material/Description";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 interface TabPanelProps {
   children?: React.ReactNode;

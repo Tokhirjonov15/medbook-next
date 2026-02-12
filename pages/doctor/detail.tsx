@@ -20,7 +20,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LanguageIcon from "@mui/icons-material/Language";
-import withLayoutMain from "@/libs/components/layout/LayoutHome";
+import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 interface TabPanelProps {
   children?: React.ReactNode;
