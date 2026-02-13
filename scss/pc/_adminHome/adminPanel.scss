@@ -1,0 +1,256 @@
+#pc-wrap {
+  &.admin-panel {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background: #f8fafc;
+
+    .admin-panel__layout {
+      display: flex;
+    }
+
+    .admin-panel__appbar {
+      width: calc(100% - 240px);
+      margin-left: 240px;
+      box-shadow: none;
+      background: #fff;
+      border-bottom: 1px solid #e8ecef;
+    }
+
+    .admin-panel__toolbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 24px;
+
+      .MuiIconButton-root {
+        color: #64748b;
+
+        &:hover {
+          background-color: #f1f5f9;
+        }
+      }
+
+      .admin-panel__avatar-button {
+        padding: 0;
+      }
+    }
+
+    .admin-aside {
+      width: 240px;
+      flex-shrink: 0;
+
+      .MuiDrawer-paper {
+        width: 240px;
+        box-sizing: border-box;
+        border-right: 1px solid #e8ecef;
+        background: #fff;
+      }
+    }
+
+    .admin-aside__toolbar {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px 16px;
+
+      .logo-box {
+        padding: 8px 0;
+        margin-bottom: 16px;
+      }
+
+      .admin-logo__avatar {
+        width: 40px;
+        height: 40px;
+      }
+
+      .admin-logo__title {
+        font-family: $font;
+        font-weight: 600;
+      }
+
+      .admin-logo__subtitle {
+        font-family: $font;
+        color: #64748b;
+      }
+    }
+
+    .admin-menu-list {
+      padding: 16px 8px 0;
+
+      a {
+        text-decoration: none;
+      }
+
+      .MuiListItemButton-root {
+        margin-bottom: 4px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &.Mui-selected {
+          background-color: #e0e7ff;
+          color: #4361ee;
+
+          .MuiListItemIcon-root {
+            color: #4361ee;
+          }
+
+          &:hover {
+            background-color: #dbeafe;
+          }
+        }
+
+        &:hover {
+          background-color: #f1f5f9;
+        }
+
+        .MuiListItemIcon-root {
+          min-width: 40px;
+          color: #64748b;
+        }
+
+        .MuiListItemText-root {
+          .MuiTypography-root {
+            font-family: $font;
+            font-size: 14px;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .admin-aside__logout {
+      margin-top: auto;
+      padding: 16px;
+    }
+
+    .admin-aside__logout-divider {
+      margin-bottom: 16px;
+    }
+
+    .admin-menu-list__logout-btn {
+      border-radius: 8px;
+      color: #ef4444;
+
+      .MuiListItemIcon-root {
+        min-width: 40px;
+        color: #ef4444;
+      }
+
+      .MuiListItemText-root .MuiTypography-root {
+        font-family: $font;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      &:hover {
+        background: #fef2f2;
+      }
+    }
+
+    #admin-content {
+      flex-grow: 1;
+      margin-top: 64px;
+      padding: 24px;
+      min-height: calc(100vh - 64px);
+      background: #f8fafc;
+    }
+
+    .admin-home {
+      .admin-home__title {
+        font-family: $font;
+        font-size: 32px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .admin-home__subtitle {
+        font-family: $font;
+        font-size: 14px;
+        color: #64748b;
+      }
+    }
+
+    .admin-section {
+      .admin-section__title {
+        font-family: $font;
+        font-size: 30px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .admin-section__subtitle {
+        margin-bottom: 16px;
+        font-family: $font;
+        font-size: 14px;
+        color: #64748b;
+      }
+    }
+
+    .admin-list {
+      .admin-list__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+      }
+
+      .admin-list__row--block {
+        align-items: flex-start;
+      }
+
+      .admin-list__col {
+        min-width: 0;
+      }
+
+      .admin-list__col--main {
+        flex: 1;
+      }
+
+      .admin-list__name {
+        font-family: $font;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        word-break: break-word;
+      }
+
+      .admin-list__meta {
+        margin-top: 2px;
+        font-family: $font;
+        font-size: 13px;
+        color: #64748b;
+        word-break: break-word;
+      }
+
+      .admin-list__status {
+        width: 160px;
+      }
+    }
+
+    .admin-cs__form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+    }
+
+    .admin-cs__type {
+      min-width: 140px;
+    }
+
+    .admin-cs__submit {
+      align-self: flex-end;
+      text-transform: none;
+      font-family: $font;
+      font-weight: 600;
+    }
+  }
+}
