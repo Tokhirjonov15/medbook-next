@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useMemo, useRef, useState } from "react";
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Avatar,
   Box,
@@ -20,6 +20,20 @@ type MyPageTab =
   | "followers"
   | "followings"
   | "articles";
+
+const tabFromQuery = (value: string | string[] | undefined): MyPageTab => {
+  const one = Array.isArray(value) ? value[0] : value;
+  if (
+    one === "schedule" ||
+    one === "clinic" ||
+    one === "followers" ||
+    one === "followings" ||
+    one === "articles"
+  ) {
+    return one;
+  }
+  return "profile";
+};
 
 type WorkDay = {
   key: string;
@@ -178,6 +192,13 @@ const DoctorMyPage: NextPage = () => {
     { id: 2, title: "How to Reduce Blood Pressure Naturally" },
     { id: 3, title: "Latest Trends in Cardiac Diagnostics" },
   ];
+  const followersCount = followers.length;
+  const followingsCount = followings.length;
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    setActiveTab(tabFromQuery(router.query.category));
+  }, [router.isReady, router.query.category]);
 
   const hasProfileChanges = useMemo(() => {
     const sameProfile =
@@ -222,6 +243,15 @@ const DoctorMyPage: NextPage = () => {
     setImageFileName(file.name);
   };
 
+  const updateTab = (next: MyPageTab) => {
+    setActiveTab(next);
+    if (next === "profile") {
+      router.push("/_doctor/mypage", undefined, { shallow: true });
+      return;
+    }
+    router.push(`/_doctor/mypage?category=${next}`, undefined, { shallow: true });
+  };
+
   return (
     <Box className="doctor-mypage">
       <Box className="doctor-mypage__header">
@@ -234,37 +264,37 @@ const DoctorMyPage: NextPage = () => {
       <Stack direction="row" className="doctor-mypage__tabs">
         <button
           className={`doctor-mypage__tab ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => setActiveTab("profile")}
+          onClick={() => updateTab("profile")}
         >
           Profile Information
         </button>
         <button
           className={`doctor-mypage__tab ${activeTab === "schedule" ? "active" : ""}`}
-          onClick={() => setActiveTab("schedule")}
+          onClick={() => updateTab("schedule")}
         >
           Schedule & Availability
         </button>
         <button
           className={`doctor-mypage__tab ${activeTab === "clinic" ? "active" : ""}`}
-          onClick={() => setActiveTab("clinic")}
+          onClick={() => updateTab("clinic")}
         >
           Clinic Details
         </button>
         <button
           className={`doctor-mypage__tab ${activeTab === "followers" ? "active" : ""}`}
-          onClick={() => setActiveTab("followers")}
+          onClick={() => updateTab("followers")}
         >
-          Followers
+          Followers ({followersCount})
         </button>
         <button
           className={`doctor-mypage__tab ${activeTab === "followings" ? "active" : ""}`}
-          onClick={() => setActiveTab("followings")}
+          onClick={() => updateTab("followings")}
         >
-          Followings
+          Followings ({followingsCount})
         </button>
         <button
           className={`doctor-mypage__tab ${activeTab === "articles" ? "active" : ""}`}
-          onClick={() => setActiveTab("articles")}
+          onClick={() => updateTab("articles")}
         >
           My Articles
         </button>
@@ -531,7 +561,9 @@ const DoctorMyPage: NextPage = () => {
 
         {activeTab === "followers" && (
           <Box className="doctor-mypage__section">
-            <Typography className="doctor-mypage__section-title">Followers</Typography>
+            <Typography className="doctor-mypage__section-title">
+              Followers ({followersCount})
+            </Typography>
             <Stack spacing={1.2}>
               {followers.map((name, idx) => (
                 <Box key={`${name}-${idx}`} className="doctor-mypage__list-item">
@@ -545,7 +577,9 @@ const DoctorMyPage: NextPage = () => {
 
         {activeTab === "followings" && (
           <Box className="doctor-mypage__section">
-            <Typography className="doctor-mypage__section-title">Followings</Typography>
+            <Typography className="doctor-mypage__section-title">
+              Followings ({followingsCount})
+            </Typography>
             <Stack spacing={1.2}>
               {followings.map((name, idx) => (
                 <Box key={`${name}-${idx}`} className="doctor-mypage__list-item">

@@ -78,17 +78,13 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                 CS
               </div>
             </Link>
-            {user && (
-              <Link href={"/my-page"}>
-                <div
-                  className={`router-link ${
-                    isActive("/my-page") ? "active" : ""
-                  }`}
-                >
-                  My Page
-                </div>
-              </Link>
-            )}
+            <Link href={"/mypage"}>
+              <div
+                className={`router-link ${isActive("/mypage") ? "active" : ""}`}
+              >
+                My Page
+              </div>
+            </Link>
           </Box>
           <Box component={"div"} className={"user-box"}>
             {!user ? (
