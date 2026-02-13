@@ -104,6 +104,69 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        .lang-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.48rem 0.72rem;
+          border: 1px solid #dbe3ea;
+          border-radius: 8px;
+          background: #ffffff;
+          color: #0f172a;
+          font-size: 0.8125rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          &:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+          }
+        }
+        .lang-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 28px;
+          height: 20px;
+          border-radius: 6px;
+          background: #eff6ff;
+          color: #2563eb;
+          font-size: 0.6875rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+        .lang-label {
+          letter-spacing: 0.04em;
+        }
+        .lang-flag {
+          width: 22px;
+          height: 16px;
+          border-radius: 3px;
+          object-fit: cover;
+          border: 1px solid #dbe3ea;
+        }
+        .lang-option-flag {
+          width: 18px;
+          height: 13px;
+          border-radius: 3px;
+          margin-right: 6px;
+          object-fit: cover;
+          border: 1px solid #dbe3ea;
+        }
+        .lang-option-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 28px;
+          height: 20px;
+          border-radius: 6px;
+          margin-right: 8px;
+          background: #eff6ff;
+          color: #2563eb;
+          font-size: 0.6875rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
         .login-btn {
           padding: 0.625rem 1.5rem;
           background: #2563eb;

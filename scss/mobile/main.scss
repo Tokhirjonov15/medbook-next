@@ -91,6 +91,66 @@
 
         .user-box {
           flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          .lang-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 8px;
+            border-radius: 7px;
+            border: 1px solid #dbe3ea;
+            background: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            color: #0f172a;
+          }
+
+          .lang-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 16px;
+            border-radius: 5px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 9px;
+            font-weight: 800;
+          }
+
+          .lang-option-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 16px;
+            border-radius: 5px;
+            margin-right: 8px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 9px;
+            font-weight: 800;
+          }
+
+          .lang-flag {
+            width: 18px;
+            height: 13px;
+            border-radius: 3px;
+            object-fit: cover;
+            border: 1px solid #dbe3ea;
+          }
+
+          .lang-option-flag {
+            width: 16px;
+            height: 11px;
+            border-radius: 3px;
+            margin-right: 6px;
+            object-fit: cover;
+            border: 1px solid #dbe3ea;
+          }
 
           .login-btn {
             padding: 6px 10px;

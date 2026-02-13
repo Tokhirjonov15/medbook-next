@@ -17,10 +17,63 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
+type LocaleKey = "en" | "kr" | "uz";
+
+const LOCALE_TEXT: Record<
+  LocaleKey,
+  {
+    home: string;
+    findDoctors: string;
+    community: string;
+    cs: string;
+    myPage: string;
+    login: string;
+    logout: string;
+  }
+> = {
+  en: {
+    home: "Home",
+    findDoctors: "Find Doctors",
+    community: "Community",
+    cs: "CS",
+    myPage: "My Page",
+    login: "Login",
+    logout: "Logout",
+  },
+  kr: {
+    home: "홈",
+    findDoctors: "의사 찾기",
+    community: "커뮤니티",
+    cs: "고객센터",
+    myPage: "마이페이지",
+    login: "로그인",
+    logout: "로그아웃",
+  },
+  uz: {
+    home: "Bosh sahifa",
+    findDoctors: "Shifokorlar",
+    community: "Jamiyat",
+    cs: "Yordam",
+    myPage: "Mening sahifam",
+    login: "Kirish",
+    logout: "Chiqish",
+  },
+};
+
+const LANGUAGE_OPTIONS: Array<{ locale: LocaleKey; label: string; flag: string }> = [
+  { locale: "en", label: "English", flag: "/img/en.png" },
+  { locale: "kr", label: "Korean", flag: "/img/kr.png" },
+  { locale: "uz", label: "Uzbek", flag: "/img/uz.png" },
+];
+
 const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const langOpen = Boolean(langAnchorEl);
   const router = useRouter();
+  const locale = (router.locale && ["en", "kr", "uz"].includes(router.locale) ? router.locale : "en") as LocaleKey;
+  const t = LOCALE_TEXT[locale];
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     if (user) {
@@ -35,6 +88,20 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
   const handleLogout = () => {
     handleClose();
     onLogout?.();
+  };
+
+  const handleLangMenuOpen = (event: MouseEvent<HTMLElement>) => {
+    setLangAnchorEl(event.currentTarget);
+  };
+
+  const handleLangMenuClose = () => {
+    setLangAnchorEl(null);
+  };
+
+  const handleLanguageChange = async (nextLocale: LocaleKey) => {
+    handleLangMenuClose();
+    if (nextLocale === locale) return;
+    await router.push(router.asPath, router.asPath, { locale: nextLocale });
   };
 
   const isActive = (path: string) => {
@@ -54,14 +121,14 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
           <Box component={"div"} className={"router-box"}>
             <Link href={"/"}>
               <div className={`router-link ${isActive("/") ? "active" : ""}`}>
-                Home
+                {t.home}
               </div>
             </Link>
             <Link href={"/doctor"}>
               <div
                 className={`router-link ${isActive("/doctor") ? "active" : ""}`}
               >
-                Find Doctors
+                {t.findDoctors}
               </div>
             </Link>
             <Link href={"/community"}>
@@ -70,27 +137,81 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                   isActive("/community") ? "active" : ""
                 }`}
               >
-                Community
+                {t.community}
               </div>
             </Link>
             <Link href={"/cs"}>
               <div className={`router-link ${isActive("/cs") ? "active" : ""}`}>
-                CS
+                {t.cs}
               </div>
             </Link>
             <Link href={"/mypage"}>
               <div
                 className={`router-link ${isActive("/mypage") ? "active" : ""}`}
               >
-                My Page
+                {t.myPage}
               </div>
             </Link>
           </Box>
           <Box component={"div"} className={"user-box"}>
+            <button className="lang-btn" onClick={handleLangMenuOpen} aria-label="Change language">
+              <img
+                className="lang-flag"
+                src={LANGUAGE_OPTIONS.find((item) => item.locale === locale)?.flag ?? "/img/en.png"}
+                alt={`${locale} flag`}
+                style={{ width: 18, height: 13, objectFit: "cover", borderRadius: 3, border: "1px solid #dbe3ea" }}
+              />
+              <span className="lang-label">{locale.toUpperCase()}</span>
+            </button>
+            <Menu
+              id="lang-menu"
+              anchorEl={langAnchorEl}
+              open={langOpen}
+              onClose={handleLangMenuClose}
+              sx={{
+                mt: "12px",
+                "& .MuiPaper-root": {
+                  borderRadius: "10px",
+                  width: "148px",
+                  minWidth: "148px",
+                  maxWidth: "148px",
+                },
+                "& .MuiMenuItem-root": {
+                  minHeight: "34px",
+                  padding: "6px 10px",
+                  fontSize: "13px",
+                  lineHeight: 1.2,
+                },
+                "& .lang-option-flag": {
+                  width: "18px",
+                  height: "13px",
+                  objectFit: "cover",
+                  borderRadius: "3px",
+                  marginRight: "8px",
+                  border: "1px solid #dbe3ea",
+                  flexShrink: 0,
+                  display: "inline-block",
+                },
+              }}
+              transformOrigin={{ horizontal: "right", vertical: "top" }}
+              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            >
+              {LANGUAGE_OPTIONS.map((item) => (
+                <MenuItem key={item.locale} onClick={() => handleLanguageChange(item.locale)}>
+                  <img
+                    className="lang-option-flag"
+                    src={item.flag}
+                    alt={`${item.label} flag`}
+                    style={{ width: 18, height: 13, objectFit: "cover", borderRadius: 3, border: "1px solid #dbe3ea" }}
+                  />
+                  <span>{item.label}</span>
+                </MenuItem>
+              ))}
+            </Menu>
             {!user ? (
               <>
                 <button className="login-btn" onClick={onLogin}>
-                  Login
+                  {t.login}
                 </button>
                 <div className={"default-user"}>
                   <img src={"/img/defaultUser.svg"} alt="Default User" />
@@ -136,7 +257,7 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                   <Box className="menu-divider" />
                   <MenuItem onClick={handleLogout} className="menu-logout">
                     <Logout fontSize="small" style={{ marginRight: "10px" }} />
-                    Logout
+                    {t.logout}
                   </MenuItem>
                 </Menu>
               </>
