@@ -1,7 +1,10 @@
 import { Box, Stack } from "@mui/material";
 import Link from "next/link";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 const Footer = () => {
+  const { t } = useMemberTranslation();
+
   return (
     <Stack className={"footer"}>
       <Stack className={"footer-main"}>
@@ -11,28 +14,28 @@ const Footer = () => {
               <img src="/img/logo.png" alt="MedBook" />
               <span className={"footer-logo-text"}>MedBook</span>
             </Link>
-            <span className={"footer-tagline"}>Your health, our priority.</span>
+            <span className={"footer-tagline"}>{t("footer.tagline")}</span>
           </Box>
           <Box component={"div"} className={"footer-links"}>
             <Link href={"/"}>
-              <div>Home</div>
+              <div>{t("nav.home")}</div>
             </Link>
             <Link href={"/doctor"}>
-              <div>Doctors</div>
+              <div>{t("footer.doctors")}</div>
             </Link>
             <Link href={"/community?articleCategory=FREE"}>
-              <div>Community</div>
+              <div>{t("nav.community")}</div>
             </Link>
             <Link href={"/cs"}>
-              <div>CS</div>
+              <div>{t("nav.cs")}</div>
             </Link>
           </Box>
           <Box component={"div"} className={"footer-legal"}>
             <Link href={"/cs"}>
-              <div>Privacy</div>
+              <div>{t("footer.privacy")}</div>
             </Link>
             <Link href={"/cs"}>
-              <div>Terms</div>
+              <div>{t("footer.terms")}</div>
             </Link>
           </Box>
         </Stack>
@@ -40,7 +43,7 @@ const Footer = () => {
       <Stack className={"footer-bottom"}>
         <Stack className={"container"}>
           <span className={"footer-copyright"}>
-            © {new Date().getFullYear()} MedBook. All rights reserved.
+            {new Date().getFullYear()} MedBook. {t("footer.rights")}
           </span>
         </Stack>
       </Stack>

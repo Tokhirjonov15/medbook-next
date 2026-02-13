@@ -7,6 +7,7 @@ import {
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { sweetMixinErrorAlert } from "@/libs/sweetAlert";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface User {
   name: string;
@@ -20,6 +21,7 @@ interface HeroProps {
 
 const Entrance = ({ user = null }: HeroProps) => {
   const router = useRouter();
+  const { t } = useMemberTranslation();
 
   const handleBookAppointment = () => {
     router.push("/doctors");
@@ -29,7 +31,7 @@ const Entrance = ({ user = null }: HeroProps) => {
     if (user) {
       router.push("/my-appointments");
     } else {
-      sweetMixinErrorAlert("Please login first");
+      sweetMixinErrorAlert(t("home.alert.loginFirst"));
     }
   };
 
@@ -37,7 +39,7 @@ const Entrance = ({ user = null }: HeroProps) => {
     if (user) {
       router.push("/medical-records");
     } else {
-      sweetMixinErrorAlert("Please login first");
+      sweetMixinErrorAlert(t("home.alert.loginFirst"));
     }
   };
 
@@ -45,7 +47,7 @@ const Entrance = ({ user = null }: HeroProps) => {
     if (user) {
       router.push("/prescriptions");
     } else {
-      sweetMixinErrorAlert("Please login first");
+      sweetMixinErrorAlert(t("home.alert.loginFirst"));
     }
   };
 
@@ -55,9 +57,10 @@ const Entrance = ({ user = null }: HeroProps) => {
         {/* Greeting Section */}
         <Box className="hero-greeting">
           <h1 className="hero-title">
-            Hello{user ? `, ${user.name.split(" ")[0]}` : ""}!
+            {t("home.hello")}
+            {user ? `, ${user.name.split(" ")[0]}` : ""}!
           </h1>
-          <p className="hero-subtitle">How can we help you today?</p>
+          <p className="hero-subtitle">{t("home.subtitle")}</p>
         </Box>
 
         {/* Action Cards */}
@@ -67,8 +70,8 @@ const Entrance = ({ user = null }: HeroProps) => {
               <CalendarMonth />
             </Box>
             <Box className="hero-card-content">
-              <h3 className="hero-card-title">Book Appointment</h3>
-              <p className="hero-card-description">Find a doctor near you</p>
+              <h3 className="hero-card-title">{t("home.bookAppointment")}</h3>
+              <p className="hero-card-description">{t("home.findDoctorNear")}</p>
             </Box>
           </Box>
 
@@ -77,8 +80,8 @@ const Entrance = ({ user = null }: HeroProps) => {
               <AccessTime />
             </Box>
             <Box className="hero-card-content">
-              <h3 className="hero-card-title">My Appointments</h3>
-              <p className="hero-card-description">Check schedule</p>
+              <h3 className="hero-card-title">{t("home.myAppointments")}</h3>
+              <p className="hero-card-description">{t("home.checkSchedule")}</p>
             </Box>
           </Box>
 
@@ -87,8 +90,8 @@ const Entrance = ({ user = null }: HeroProps) => {
               <Description />
             </Box>
             <Box className="hero-card-content">
-              <h3 className="hero-card-title">Medical Records</h3>
-              <p className="hero-card-description">History & Results</p>
+              <h3 className="hero-card-title">{t("home.medicalRecords")}</h3>
+              <p className="hero-card-description">{t("home.historyResults")}</p>
             </Box>
           </Box>
 
@@ -97,8 +100,8 @@ const Entrance = ({ user = null }: HeroProps) => {
               <Medication />
             </Box>
             <Box className="hero-card-content">
-              <h3 className="hero-card-title">Prescriptions</h3>
-              <p className="hero-card-description">View active meds</p>
+              <h3 className="hero-card-title">{t("home.prescriptions")}</h3>
+              <p className="hero-card-description">{t("home.viewActiveMeds")}</p>
             </Box>
           </Box>
         </Box>

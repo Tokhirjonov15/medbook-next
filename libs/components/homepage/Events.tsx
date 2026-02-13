@@ -3,9 +3,8 @@ import {
   CalendarToday,
   LocationOn,
   AccessTime,
-  ArrowForward,
 } from "@mui/icons-material";
-import { useRouter } from "next/navigation";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface Event {
   id: string;
@@ -21,7 +20,7 @@ interface Event {
 }
 
 const Events = () => {
-  const router = useRouter();
+  const { t } = useMemberTranslation();
 
   const events: Event[] = [
     {
@@ -71,9 +70,9 @@ const Events = () => {
         {/* Header */}
         <Box className="events-header">
           <Box>
-            <h2 className="events-title">Upcoming Health Events</h2>
+            <h2 className="events-title">{t("home.upcomingEvents")}</h2>
             <p className="events-subtitle">
-              Join our community health programs and workshops
+              {t("home.eventsSubtitle")}
             </p>
           </Box>
         </Box>

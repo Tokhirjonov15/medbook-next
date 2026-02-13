@@ -5,6 +5,9 @@ import Menu from "@mui/material/Menu";
 import { Logout } from "@mui/icons-material";
 import { useState, MouseEvent } from "react";
 import { useRouter } from "next/router";
+import { LANGUAGE_OPTIONS } from "@/libs/i18n/member";
+import type { LocaleKey } from "@/libs/i18n/member";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface User {
   name: string;
@@ -17,63 +20,13 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
-type LocaleKey = "en" | "kr" | "uz";
-
-const LOCALE_TEXT: Record<
-  LocaleKey,
-  {
-    home: string;
-    findDoctors: string;
-    community: string;
-    cs: string;
-    myPage: string;
-    login: string;
-    logout: string;
-  }
-> = {
-  en: {
-    home: "Home",
-    findDoctors: "Find Doctors",
-    community: "Community",
-    cs: "CS",
-    myPage: "My Page",
-    login: "Login",
-    logout: "Logout",
-  },
-  kr: {
-    home: "홈",
-    findDoctors: "의사 찾기",
-    community: "커뮤니티",
-    cs: "고객센터",
-    myPage: "마이페이지",
-    login: "로그인",
-    logout: "로그아웃",
-  },
-  uz: {
-    home: "Bosh sahifa",
-    findDoctors: "Shifokorlar",
-    community: "Jamiyat",
-    cs: "Yordam",
-    myPage: "Mening sahifam",
-    login: "Kirish",
-    logout: "Chiqish",
-  },
-};
-
-const LANGUAGE_OPTIONS: Array<{ locale: LocaleKey; label: string; flag: string }> = [
-  { locale: "en", label: "English", flag: "/img/en.png" },
-  { locale: "kr", label: "Korean", flag: "/img/kr.png" },
-  { locale: "uz", label: "Uzbek", flag: "/img/uz.png" },
-];
-
 const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const langOpen = Boolean(langAnchorEl);
   const router = useRouter();
-  const locale = (router.locale && ["en", "kr", "uz"].includes(router.locale) ? router.locale : "en") as LocaleKey;
-  const t = LOCALE_TEXT[locale];
+  const { t, locale } = useMemberTranslation();
 
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     if (user) {
@@ -121,14 +74,14 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
           <Box component={"div"} className={"router-box"}>
             <Link href={"/"}>
               <div className={`router-link ${isActive("/") ? "active" : ""}`}>
-                {t.home}
+                {t("nav.home")}
               </div>
             </Link>
             <Link href={"/doctor"}>
               <div
                 className={`router-link ${isActive("/doctor") ? "active" : ""}`}
               >
-                {t.findDoctors}
+                {t("nav.findDoctors")}
               </div>
             </Link>
             <Link href={"/community"}>
@@ -137,19 +90,19 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                   isActive("/community") ? "active" : ""
                 }`}
               >
-                {t.community}
+                {t("nav.community")}
               </div>
             </Link>
             <Link href={"/cs"}>
               <div className={`router-link ${isActive("/cs") ? "active" : ""}`}>
-                {t.cs}
+                {t("nav.cs")}
               </div>
             </Link>
             <Link href={"/mypage"}>
               <div
                 className={`router-link ${isActive("/mypage") ? "active" : ""}`}
               >
-                {t.myPage}
+                {t("nav.myPage")}
               </div>
             </Link>
           </Box>
@@ -211,7 +164,7 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
             {!user ? (
               <>
                 <button className="login-btn" onClick={onLogin}>
-                  {t.login}
+                  {t("nav.login")}
                 </button>
                 <div className={"default-user"}>
                   <img src={"/img/defaultUser.svg"} alt="Default User" />
@@ -257,7 +210,7 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                   <Box className="menu-divider" />
                   <MenuItem onClick={handleLogout} className="menu-logout">
                     <Logout fontSize="small" style={{ marginRight: "10px" }} />
-                    {t.logout}
+                    {t("nav.logout")}
                   </MenuItem>
                 </Menu>
               </>

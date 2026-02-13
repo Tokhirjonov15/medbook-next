@@ -7,6 +7,7 @@ import { useRef } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface Doctor {
   id: string;
@@ -22,6 +23,8 @@ interface Doctor {
 const TopRatedDoctors = () => {
   const router = useRouter();
   const swiperRef = useRef<SwiperType | null>(null);
+  const { t } = useMemberTranslation();
+
   const doctors: Doctor[] = [
     {
       id: "1",
@@ -69,12 +72,19 @@ const TopRatedDoctors = () => {
     router.push(`/doctors/${doctorId}/book`);
   };
 
+  const translateAvailability = (availability: string) => {
+    if (availability === "Available Today") return t("home.availableToday");
+    if (availability === "Available Tomorrow") return t("home.availableTomorrow");
+    if (availability === "Next Available: Mon") return t("home.nextAvailableMon");
+    if (availability === "Next Available: Wed") return t("home.nextAvailableWed");
+    return availability;
+  };
+
   return (
     <Box className="top-rated-doctors">
       <Stack className="top-rated-doctors-container">
-        {/* Header */}
         <Box className="top-rated-doctors-header">
-          <h2 className="top-rated-doctors-title">Top Rated Doctors</h2>
+          <h2 className="top-rated-doctors-title">{t("home.topRatedDoctors")}</h2>
           <Box className="swiper-navigation-buttons">
             <button
               className="swiper-button-custom swiper-button-prev-custom"
@@ -91,7 +101,6 @@ const TopRatedDoctors = () => {
           </Box>
         </Box>
 
-        {/* Doctors Swiper */}
         <Box className="top-rated-doctors-swiper">
           <Swiper
             modules={[Navigation, Pagination]}
@@ -127,10 +136,7 @@ const TopRatedDoctors = () => {
             {doctors.map((doctor) => (
               <SwiperSlide key={doctor.id}>
                 <Box className="doctor-card">
-                  <Box
-                    className="doctor-card-image"
-                    sx={{ backgroundColor: doctor.backgroundColor }}
-                  >
+                  <Box className="doctor-card-image" sx={{ backgroundColor: doctor.backgroundColor }}>
                     <img src={doctor.image} alt={doctor.name} />
                     <Box className="doctor-card-rating">
                       <Star />
@@ -140,17 +146,12 @@ const TopRatedDoctors = () => {
                   <Box className="doctor-card-content">
                     <h3 className="doctor-card-name">{doctor.name}</h3>
                     <p className="doctor-card-specialization">
-                      {doctor.specialization} • {doctor.experience} yrs exp
+                      {doctor.specialization} - {doctor.experience} {t("home.yearsExp")}
                     </p>
                     <Box className="doctor-card-footer">
-                      <span className="doctor-card-availability">
-                        {doctor.availability}
-                      </span>
-                      <button
-                        className="doctor-card-book-btn"
-                        onClick={() => handleBooking(doctor.id)}
-                      >
-                        Book
+                      <span className="doctor-card-availability">{translateAvailability(doctor.availability)}</span>
+                      <button className="doctor-card-book-btn" onClick={() => handleBooking(doctor.id)}>
+                        {t("home.book")}
                       </button>
                     </Box>
                   </Box>
