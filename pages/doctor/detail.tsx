@@ -377,7 +377,12 @@ const DoctorDetail: NextPage = () => {
 
           {/* Book Appointment Button */}
           <Stack className="book-section">
-            <Button variant="contained" fullWidth className="book-btn">
+            <Button
+              variant="contained"
+              fullWidth
+              className="book-btn"
+              onClick={() => router.push("/payment")}
+            >
               Book Appointment for ${doctor.consultationFee}
             </Button>
           </Stack>

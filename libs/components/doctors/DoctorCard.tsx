@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -24,6 +25,7 @@ interface DoctorCardProps {
 }
 
 const DoctorCard = ({ doctor }: DoctorCardProps) => {
+  const router = useRouter();
   const imagePath: string = "/img/girl.svg";
 
   const renderStars = (rating: number) => {
@@ -138,7 +140,11 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
         </Stack>
 
         <Stack className="action-buttons">
-          <Button className="book-now-btn" variant="contained">
+          <Button
+            className="book-now-btn"
+            variant="contained"
+            onClick={() => router.push("/payment")}
+          >
             Book Now
           </Button>
           <Link
