@@ -6,10 +6,22 @@ import withLayoutMain from "@/libs/components/layout/LayoutMember";
 
 type MyPageCategory =
   | "personalInformation"
+  | "myAppointments"
   | "followers"
   | "followings"
   | "myArticles"
   | "recentlyVisitedDoctor";
+
+type AppointmentStatus = "CONFIRMED" | "PENDING" | "CANCELLED";
+type AppointmentMode = "Video" | "In-Person";
+type AppointmentItem = {
+  id: number;
+  doctorName: string;
+  specialization: string;
+  status: AppointmentStatus;
+  mode: AppointmentMode;
+  startsAt: string;
+};
 
 type PersonalInfo = {
   image: string;
@@ -20,6 +32,7 @@ type PersonalInfo = {
 const categoryFromQuery = (value: string | string[] | undefined): MyPageCategory => {
   const one = Array.isArray(value) ? value[0] : value;
   if (
+    one === "myAppointments" ||
     one === "followers" ||
     one === "followings" ||
     one === "myArticles" ||
@@ -40,6 +53,9 @@ const MyPage: NextPage = () => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [category, setCategory] = useState<MyPageCategory>("personalInformation");
+  const [appointmentTab, setAppointmentTab] = useState<"upcoming" | "past" | "cancelled">(
+    "upcoming",
+  );
 
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>(initialPersonalInfo);
   const [selectedFileName, setSelectedFileName] = useState("");
@@ -69,6 +85,40 @@ const MyPage: NextPage = () => {
     { id: 2, name: "Dr. Michael Chen", specialization: "Dermatologist" },
     { id: 3, name: "Dr. Emily Roberts", specialization: "Neurologist" },
   ];
+  const appointments: AppointmentItem[] = [
+    {
+      id: 1,
+      doctorName: "Dr. Sarah Jenkins",
+      specialization: "Cardiologist",
+      status: "CONFIRMED",
+      mode: "Video",
+      startsAt: "2026-02-12T10:00:00",
+    },
+    {
+      id: 2,
+      doctorName: "Dr. Michael Chen",
+      specialization: "Dermatologist",
+      status: "PENDING",
+      mode: "In-Person",
+      startsAt: "2026-02-14T14:30:00",
+    },
+    {
+      id: 3,
+      doctorName: "Dr. Emily White",
+      specialization: "General Practitioner",
+      status: "CONFIRMED",
+      mode: "Video",
+      startsAt: "2026-02-20T09:15:00",
+    },
+    {
+      id: 4,
+      doctorName: "Dr. James Wilson",
+      specialization: "Neurologist",
+      status: "CANCELLED",
+      mode: "In-Person",
+      startsAt: "2026-02-11T11:00:00",
+    },
+  ];
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -82,6 +132,23 @@ const MyPage: NextPage = () => {
       personalInfo.phone.trim() !== initialPersonalInfo.phone
     );
   }, [personalInfo]);
+
+  const filteredAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments.filter((appointment) => {
+      if (appointmentTab === "cancelled") {
+        return appointment.status === "CANCELLED";
+      }
+      if (appointment.status === "CANCELLED") {
+        return false;
+      }
+      const appointmentDate = new Date(appointment.startsAt);
+      if (appointmentTab === "upcoming") {
+        return appointmentDate.getTime() >= now.getTime();
+      }
+      return appointmentDate.getTime() < now.getTime();
+    });
+  }, [appointments, appointmentTab]);
 
   const updateCategory = (next: MyPageCategory) => {
     setCategory(next);
@@ -134,6 +201,12 @@ const MyPage: NextPage = () => {
             onClick={() => updateCategory("myArticles")}
           >
             My Articles
+          </button>
+          <button
+            className={`mypage-tab ${category === "myAppointments" ? "active" : ""}`}
+            onClick={() => updateCategory("myAppointments")}
+          >
+            My Appointments
           </button>
           <button
             className={`mypage-tab ${category === "recentlyVisitedDoctor" ? "active" : ""}`}
@@ -248,6 +321,107 @@ const MyPage: NextPage = () => {
                   </Box>
                 ))}
               </Stack>
+            </Box>
+          )}
+
+          {category === "myAppointments" && (
+            <Box className="mypage-section">
+              <Typography className="mypage-section-title">My Appointments</Typography>
+              <Typography className="mypage-list-subtitle">
+                Manage your upcoming visits and history.
+              </Typography>
+
+              <Stack direction="row" className="mypage-appointments-tabs">
+                <button
+                  className={`mypage-appointments-tab ${appointmentTab === "upcoming" ? "active" : ""}`}
+                  onClick={() => setAppointmentTab("upcoming")}
+                >
+                  Upcoming
+                </button>
+                <button
+                  className={`mypage-appointments-tab ${appointmentTab === "past" ? "active" : ""}`}
+                  onClick={() => setAppointmentTab("past")}
+                >
+                  Past
+                </button>
+                <button
+                  className={`mypage-appointments-tab ${appointmentTab === "cancelled" ? "active" : ""}`}
+                  onClick={() => setAppointmentTab("cancelled")}
+                >
+                  Cancelled
+                </button>
+              </Stack>
+
+              {filteredAppointments.length === 0 ? (
+                <Box className="mypage-empty-appointments">
+                  <Typography className="mypage-empty-title">
+                    No appointments found
+                  </Typography>
+                  <Typography className="mypage-empty-subtitle">
+                    You don't have any appointments in this category yet.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack spacing={1.2} className="mypage-appointments-list">
+                  {filteredAppointments.map((appointment) => (
+                    <Box
+                      key={appointment.id}
+                      className="mypage-appointment-card"
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Box>
+                          <Typography className="mypage-appointment-doctor">
+                            {appointment.doctorName}
+                          </Typography>
+                          <Typography className="mypage-list-subtitle">
+                            {appointment.specialization}
+                          </Typography>
+                        </Box>
+                        <span
+                          className={`mypage-appointment-mode ${appointment.mode === "Video" ? "video" : "inperson"}`}
+                        >
+                          {appointment.mode}
+                        </span>
+                      </Stack>
+
+                      <Typography className="mypage-appointment-date">
+                        {new Date(appointment.startsAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        {new Date(appointment.startsAt).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Typography>
+
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <span
+                          className={`mypage-appointment-status ${
+                            appointment.status === "CONFIRMED"
+                              ? "confirmed"
+                              : appointment.status === "PENDING"
+                                ? "pending"
+                                : "cancelled"
+                          }`}
+                        >
+                          {appointment.status}
+                        </span>
+                        <Button
+                          variant="outlined"
+                          className="mypage-view-details-btn"
+                          onClick={() =>
+                            router.push(`/mypage/appointments/detail?id=${appointment.id}`)
+                          }
+                        >
+                          View Details
+                        </Button>
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
             </Box>
           )}
 

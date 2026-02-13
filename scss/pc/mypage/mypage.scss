@@ -184,5 +184,134 @@
       color: #64748b;
       font-weight: 500;
     }
+
+    .mypage-appointments-tabs {
+      margin-top: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #e5e7eb;
+      gap: 6px;
+    }
+
+    .mypage-appointments-tab {
+      border: 0;
+      background: transparent;
+      font-family: $font;
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      padding: 8px 10px;
+      border-bottom: 2px solid transparent;
+
+      &.active {
+        color: #4361ee;
+        border-bottom-color: #4361ee;
+      }
+    }
+
+    .mypage-appointments-list {
+      margin-top: 10px;
+    }
+
+    .mypage-appointment-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mypage-appointment-doctor {
+      font-family: $font;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .mypage-appointment-mode {
+      font-family: $font;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+
+      &.video {
+        color: #2563eb;
+        background: #e0ecff;
+      }
+
+      &.inperson {
+        color: #7c3aed;
+        background: #ede9fe;
+      }
+    }
+
+    .mypage-appointment-date {
+      font-family: $font;
+      font-size: 13px;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .mypage-appointment-status {
+      font-family: $font;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+
+      &.confirmed {
+        color: #15803d;
+        background: #dcfce7;
+      }
+
+      &.pending {
+        color: #b45309;
+        background: #fef3c7;
+      }
+
+      &.cancelled {
+        color: #b91c1c;
+        background: #fee2e2;
+      }
+    }
+
+    .mypage-view-details-btn {
+      border-radius: 8px;
+      text-transform: none;
+      font-family: $font;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .mypage-empty-appointments {
+      margin-top: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #f8fafc;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .mypage-empty-title {
+      font-family: $font;
+      font-size: 20px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .mypage-empty-subtitle {
+      margin-top: 6px;
+      font-family: $font;
+      font-size: 13px;
+      color: #94a3b8;
+    }
   }
 }
