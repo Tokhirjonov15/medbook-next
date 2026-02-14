@@ -45,56 +45,8 @@ export const GET_MEMBER = gql`
 `;
 
 /******************
- *    DOCTORS    *
+ *     DOCTORS    *
  *****************/
-
-export const GET_DOCTORS = gql`
-  query GetDoctors($input: DoctorsInquiry!) {
-    getDoctors(input: $input) {
-      list {
-        _id
-        memberNick
-        memberType
-        memberPhone
-        memberImage
-        memberGender
-        createdAt
-        updatedAt
-        accessToken
-        memberFullName
-        licenseNumber
-        specialization
-        experience
-        consultationFee
-        languages
-        doctorViews
-        reviewCount
-        memberDesc
-        memberArticles
-        memberFollowers
-        memberFollowings
-        memberComments
-        memberWarnings
-        memberBlocks
-        memberLikes
-        clinicAddress
-        clinicName
-        workingDays
-        workingHours
-        breakTime
-        meLiked {
-          memberId
-          likeRefId
-          myFavorite
-        }
-        memberStatus
-      }
-      metaCounter {
-        total
-      }
-    }
-  }
-`;
 
 export const GET_DOCTOR = gql`
   query GetDoctor($input: String!) {
@@ -143,45 +95,40 @@ export const GET_DOCTOR = gql`
   }
 `;
 
-export const GET_VISITED_DOCTORS = gql`
-  query GetVisitedDoctors($input: OrdinaryInquiry!) {
-    getVisitedDoctors(input: $input) {
-      list {
-        _id
-        memberNick
-        memberStatus
-        memberFullName
-        memberPhone
-        memberDesc
-        memberArticles
-        memberFollowers
-        memberFollowings
-        memberComments
-        memberWarnings
-        memberBlocks
-        memberLikes
-        licenseNumber
-        specialization
-        experience
-        consultationFee
-        memberType
-        memberGender
-        languages
-        memberImage
-        accessToken
-        clinicAddress
-        clinicName
-        workingDays
-        workingHours
-        breakTime
-        doctorViews
-        reviewCount
-        createdAt
-        updatedAt
-      }
-      metaCounter {
-        total
-      }
+export const LIKE_TARGET_DOCTOR = gql`
+  mutation LikeTargetDoctor($input: String!) {
+    likeTargetDoctor(memberId: $input) {
+      _id
+      memberNick
+      memberStatus
+      memberFullName
+      memberPhone
+      memberDesc
+      memberArticles
+      memberFollowers
+      memberFollowings
+      memberComments
+      memberWarnings
+      memberBlocks
+      memberLikes
+      licenseNumber
+      specialization
+      experience
+      consultationFee
+      memberType
+      memberGender
+      languages
+      memberImage
+      accessToken
+      clinicAddress
+      clinicName
+      workingDays
+      workingHours
+      breakTime
+      doctorViews
+      reviewCount
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -190,9 +137,9 @@ export const GET_VISITED_DOCTORS = gql`
  *    APPOINTMENT    *
  ********************/
 
-export const GET_MEMBER_APPOINTMENTS = gql`
-  query GetMyAppointments($input: AppointmentsInquiry!) {
-    getMyAppointments(input: $input) {
+export const GET_DOCTOR_APPOINTMENTS = gql`
+  query GetDoctorAppointments($input: AppointmentsInquiry!) {
+    getDoctorAppointments(input: $input) {
       list {
         _id
         patient
