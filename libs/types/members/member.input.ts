@@ -33,7 +33,7 @@ interface DISearch {
 export interface DoctorsInquiry {
   page: number;
   limit: number;
-  sort?: number;
+  sort?: string;
   direction?: Direction;
   search: DISearch;
 }
@@ -46,7 +46,7 @@ interface MISearch {
 export interface MembersInquiry {
   page: number;
   limit: number;
-  sort?: number;
+  sort?: string;
   direction?: Direction;
   search: MISearch;
 }
