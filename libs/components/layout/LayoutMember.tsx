@@ -4,12 +4,19 @@ import Top from "../Top";
 import Footer from "../Footer";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
 import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
+import { useRouter } from "next/router";
+import { useReactiveVar } from "@apollo/client";
+import { userVar } from "@/apollo/store";
+import { logOut } from "@/libs/auth";
 
 const withLayoutMain = (Component: any) => {
   return (props: any) => {
     const device = useDeviceDetect();
     const isMobile = device === "mobile";
     const { t, locale } = useMemberTranslation();
+    const router = useRouter();
+    const user = useReactiveVar(userVar);
+    const isLoggedIn = Boolean(user?._id);
 
     return (
       <>
@@ -19,7 +26,16 @@ const withLayoutMain = (Component: any) => {
         </Head>
         <Stack id="pc-wrap" className={isMobile ? "member-mobile" : ""}>
           <Stack id={"top"}>
-            <Top />
+            <Top
+              user={
+                isLoggedIn
+                  ? { name: user?.memberFullName || user?.memberNick || "User", image: user?.memberImage || "" }
+                  : null
+              }
+              onLogin={() => router.push("/auth/login")}
+              onSignup={() => router.push("/auth/signup")}
+              onLogout={() => logOut()}
+            />
           </Stack>
 
           <Stack id={"main"}>

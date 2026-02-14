@@ -12,6 +12,8 @@ import {
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
+import { useReactiveVar } from "@apollo/client";
+import { doctorVar } from "@/apollo/store";
 
 type MyPageTab =
   | "profile"
@@ -79,10 +81,9 @@ const timeOptions = [
 
 const INITIAL_PROFILE = {
   image: "/img/defaultUser.svg",
-  fullName: "Dr. Alex Johnson",
-  phone: "+1 (555) 123-9876",
-  description:
-    "Senior Cardiologist with 12+ years of experience focused on preventive heart care.",
+  fullName: "",
+  phone: "",
+  description: "",
 };
 
 const INITIAL_LANGUAGE_SELECTIONS = ["English", "Spanish"];
@@ -90,6 +91,7 @@ const INITIAL_SPECIALIZATION_SELECTIONS = ["Cardiology", "Neurology"];
 
 const DoctorMyPage: NextPage = () => {
   const router = useRouter();
+  const doctor = useReactiveVar(doctorVar);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<MyPageTab>("profile");
   const [acceptingAppointments, setAcceptingAppointments] = useState(true);
@@ -199,6 +201,17 @@ const DoctorMyPage: NextPage = () => {
     if (!router.isReady) return;
     setActiveTab(tabFromQuery(router.query.category));
   }, [router.isReady, router.query.category]);
+
+  useEffect(() => {
+    if (!doctor?._id) return;
+    setProfile((prev) => ({
+      ...prev,
+      image: doctor.memberImage || "/img/defaultUser.svg",
+      fullName: doctor.memberFullName || doctor.memberNick || "",
+      phone: doctor.memberPhone || "",
+      description: doctor.memberDesc || "",
+    }));
+  }, [doctor]);
 
   const hasProfileChanges = useMemo(() => {
     const sameProfile =

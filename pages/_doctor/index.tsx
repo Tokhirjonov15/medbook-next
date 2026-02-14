@@ -23,9 +23,13 @@ import PeopleIcon from "@mui/icons-material/People";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 import { NextPage } from "next";
+import { useReactiveVar } from "@apollo/client";
+import { doctorVar } from "@/apollo/store";
 
 const DoctorDashboard: NextPage = () => {
   const router = useRouter();
+  const doctor = useReactiveVar(doctorVar);
+  const doctorName = doctor?.memberFullName || doctor?.memberNick || "Doctor";
 
   // Mock data - replace with API calls
   const stats = {
@@ -146,7 +150,7 @@ const DoctorDashboard: NextPage = () => {
             Doctor Dashboard
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Welcome back, Dr. Alex. Here is your daily overview.
+            Welcome back, {doctorName}. Here is your daily overview.
           </Typography>
         </Box>
       </Stack>

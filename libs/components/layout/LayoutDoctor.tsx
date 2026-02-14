@@ -17,6 +17,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DoctorMenuList from "../_doctorsHome/DoctorMenuList";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
+import { useReactiveVar } from "@apollo/client";
+import { doctorVar } from "@/apollo/store";
+import { MemberType } from "@/libs/enums/member.enum";
+import { getJwtToken, logOut, updateUserInfo } from "@/libs/auth";
 
 const drawerWidth = 240;
 
@@ -25,6 +29,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
     const device = useDeviceDetect();
 
     const router = useRouter();
+    const doctor = useReactiveVar(doctorVar);
     const isMyPage = router.pathname.startsWith("/_doctor/mypage");
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
       null,
@@ -32,6 +37,24 @@ const withLayoutDoctor = (Component: ComponentType) => {
     const [loading, setLoading] = useState(true);
 
     /** LIFECYCLES **/
+    useEffect(() => {
+      const token = getJwtToken();
+      if (!doctor?._id && token) {
+        updateUserInfo(token);
+        return;
+      }
+
+      if (!doctor?._id || doctor.memberType !== MemberType.DOCTOR) {
+        router.replace("/auth/login");
+      } else {
+        setLoading(false);
+      }
+    }, [router, doctor]);
+
+    const doctorDisplayName = doctor?.memberFullName || doctor?.memberNick || "Doctor";
+    const doctorPhone = doctor?.memberPhone || "-";
+    const doctorImage = doctor?.memberImage || "/img/defaultUser.svg";
+
     /** HANDLERS **/
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
       setAnchorElUser(event.currentTarget);
@@ -40,6 +63,8 @@ const withLayoutDoctor = (Component: ComponentType) => {
     const handleCloseUserMenu = () => {
       setAnchorElUser(null);
     };
+
+    if (loading) return null;
 
     if (device === "mobile") {
       return <Stack>DOCTOR MOBILE</Stack>;
@@ -73,7 +98,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
                   </IconButton>
                   <Tooltip title="Open settings">
                     <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                      <Avatar src={"/img/defaultUser.svg"} />
+                      <Avatar src={doctorImage} />
                     </IconButton>
                   </Tooltip>
                 </Stack>
@@ -107,21 +132,21 @@ const withLayoutDoctor = (Component: ComponentType) => {
                         component={"h6"}
                         sx={{ mb: "4px" }}
                       >
-                        Alex
+                        {doctorDisplayName}
                       </Typography>
                       <Typography
                         variant={"subtitle1"}
                         component={"p"}
                         color={"#757575"}
                       >
-                        +8210 2076 7640
+                        {doctorPhone}
                       </Typography>
                     </Stack>
                     <Divider />
                     <Box component={"div"} sx={{ p: 1, py: "6px" }}>
                       <MenuItem sx={{ px: "16px", py: "6px" }}>
                         <Typography variant={"subtitle1"} component={"span"}>
-                          Logout
+                          <span onClick={() => logOut()}>Logout</span>
                         </Typography>
                       </MenuItem>
                     </Box>
@@ -159,7 +184,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
                   mb={2}
                 >
                   <Avatar
-                    src={"/img/defaultUser.svg"}
+                    src={doctorImage}
                     sx={{ width: 40, height: 40 }}
                   />
                   <Stack>
@@ -167,7 +192,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
                       MedBook
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Alex
+                      {doctorDisplayName}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -181,7 +206,9 @@ const withLayoutDoctor = (Component: ComponentType) => {
                 <Divider sx={{ mb: 2 }} />
                 <MenuItem sx={{ borderRadius: 1, color: "#ef4444" }}>
                   <LogoutIcon />
-                  <Typography variant="body2">Logout</Typography>
+                  <Typography variant="body2" onClick={() => logOut()}>
+                    Logout
+                  </Typography>
                 </MenuItem>
               </Box>
             </Drawer>

@@ -24,12 +24,19 @@ import ArticleIcon from "@mui/icons-material/Article";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
+import { useEffect, useState } from "react";
+import { useReactiveVar } from "@apollo/client";
+import { userVar } from "@/apollo/store";
+import { MemberType } from "@/libs/enums/member.enum";
+import { getJwtToken, logOut, updateUserInfo } from "@/libs/auth";
 
 const withLayoutAdmin = (Component: ComponentType) => {
   return (props: object) => {
     const device = useDeviceDetect();
 
     const router = useRouter();
+    const user = useReactiveVar(userVar);
+    const [loading, setLoading] = useState(true);
     const pathnames = router.pathname.split("/").filter((x: string) => x);
     const adminSection = pathnames[1];
 
@@ -73,6 +80,22 @@ const withLayoutAdmin = (Component: ComponentType) => {
         url: "/_admin/cs",
       },
     ];
+
+    useEffect(() => {
+      const token = getJwtToken();
+      if (!user?._id && token) {
+        updateUserInfo(token);
+        return;
+      }
+
+      if (!user?._id || user.memberType !== MemberType.ADMIN) {
+        router.replace("/auth/login");
+      } else {
+        setLoading(false);
+      }
+    }, [router, user]);
+
+    if (loading) return null;
 
     if (device === "mobile") {
       return <Stack>ADMIN MOBILE</Stack>;
@@ -143,7 +166,7 @@ const withLayoutAdmin = (Component: ComponentType) => {
 
               <Box className="admin-aside__logout">
                 <Divider className="admin-aside__logout-divider" />
-                <MenuItemLogout onClick={() => router.push("/")} />
+                <MenuItemLogout onClick={() => logOut()} />
               </Box>
             </Drawer>
 

@@ -17,10 +17,11 @@ interface User {
 interface NavbarProps {
   user?: User | null;
   onLogin?: () => void;
+  onSignup?: () => void;
   onLogout?: () => void;
 }
 
-const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
+const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -98,13 +99,15 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
                 {t("nav.cs")}
               </div>
             </Link>
-            <Link href={"/mypage"}>
-              <div
-                className={`router-link ${isActive("/mypage") ? "active" : ""}`}
-              >
-                {t("nav.myPage")}
-              </div>
-            </Link>
+            {user && (
+              <Link href={"/mypage"}>
+                <div
+                  className={`router-link ${isActive("/mypage") ? "active" : ""}`}
+                >
+                  {t("nav.myPage")}
+                </div>
+              </Link>
+            )}
           </Box>
           <Box component={"div"} className={"user-box"}>
             <button className="lang-btn" onClick={handleLangMenuOpen} aria-label="Change language">
@@ -163,6 +166,9 @@ const Top = ({ user = null, onLogin, onLogout }: NavbarProps) => {
             </Menu>
             {!user ? (
               <>
+                <button className="signup-btn" onClick={onSignup}>
+                  Sign Up
+                </button>
                 <button className="login-btn" onClick={onLogin}>
                   {t("nav.login")}
                 </button>

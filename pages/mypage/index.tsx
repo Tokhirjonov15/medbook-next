@@ -3,6 +3,9 @@ import { Avatar, Box, Button, Stack, TextField, Typography } from "@mui/material
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import withLayoutMain from "@/libs/components/layout/LayoutMember";
+import { useReactiveVar } from "@apollo/client";
+import { userVar } from "@/apollo/store";
+import { getJwtToken, updateUserInfo } from "@/libs/auth";
 
 type MyPageCategory =
   | "personalInformation"
@@ -51,6 +54,7 @@ const initialPersonalInfo: PersonalInfo = {
 
 const MyPage: NextPage = () => {
   const router = useRouter();
+  const user = useReactiveVar(userVar);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [category, setCategory] = useState<MyPageCategory>("personalInformation");
   const [appointmentTab, setAppointmentTab] = useState<"upcoming" | "past" | "cancelled">(
@@ -119,6 +123,17 @@ const MyPage: NextPage = () => {
       startsAt: "2026-02-11T11:00:00",
     },
   ];
+
+  useEffect(() => {
+    const token = getJwtToken();
+    if (!user?._id && token) {
+      updateUserInfo(token);
+      return;
+    }
+    if (!token) {
+      router.replace("/auth/login");
+    }
+  }, [router, user]);
 
   useEffect(() => {
     if (!router.isReady) return;
