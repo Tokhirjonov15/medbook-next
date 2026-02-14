@@ -21,37 +21,18 @@ import {
   HealthAndSafety,
 } from "@mui/icons-material";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
+import { useQuery } from "@apollo/client";
 import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
+import { GET_DOCTORS } from "@/apollo/user/query";
+import { Specialization } from "@/libs/enums/specialization.enum";
+import { Doctor } from "@/libs/types/doctors/doctor";
+import { T } from "@/libs/types/common";
 
-enum DoctorSpecialization {
-  CARDIOLOGIST = "CARDIOLOGIST",
-  DERMATOLOGIST = "DERMATOLOGIST",
-  PEDIATRICIAN = "PEDIATRICIAN",
-  PSYCHIATRIST = "PSYCHIATRIST",
-  NEUROLOGIST = "NEUROLOGIST",
-  ORTHOPEDIC = "ORTHOPEDIC",
-  ENT_SPECIALIST = "ENT_SPECIALIST",
-  GENERAL_PHYSICIAN = "GENERAL_PHYSICIAN",
-  GYNECOLOGIST = "GYNECOLOGIST",
-  DENTIST = "DENTIST",
-  OPHTHALMOLOGIST = "OPHTHALMOLOGIST",
-  UROLOGIST = "UROLOGIST",
-  GASTROENTEROLOGIST = "GASTROENTEROLOGIST",
-  PULMONOLOGIST = "PULMONOLOGIST",
-  ENDOCRINOLOGIST = "ENDOCRINOLOGIST",
-  ONCOLOGIST = "ONCOLOGIST",
-  RADIOLOGIST = "RADIOLOGIST",
-  ANESTHESIOLOGIST = "ANESTHESIOLOGIST",
-  PATHOLOGIST = "PATHOLOGIST",
-  RHEUMATOLOGIST = "RHEUMATOLOGIST",
-}
-
-interface Specialization {
-  type: DoctorSpecialization;
+interface SpecializationCard {
+  type: Specialization;
   name: string;
   i18nKey?: string;
-  doctorCount: number;
   icon: React.ReactNode;
   color: string;
 }
@@ -62,190 +43,197 @@ const BrowseBySpecialization = () => {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
   const { t } = useMemberTranslation();
+  const [doctorSpecialization, setDoctorSpecialization] = useState<Doctor[]>(
+    [],
+  );
 
-  const specializations: Specialization[] = [
+  const specializations: SpecializationCard[] = [
     {
-      type: DoctorSpecialization.GENERAL_PHYSICIAN,
+      type: Specialization.GENERAL_PHYSICIAN,
       name: "General Physician",
       i18nKey: "specialization.generalPhysician",
-      doctorCount: 124,
       icon: <LocalHospital />,
       color: "#3b82f6",
     },
     {
-      type: DoctorSpecialization.DENTIST,
+      type: Specialization.DENTIST,
       name: "Dentist",
       i18nKey: "specialization.dentist",
-      doctorCount: 86,
       icon: <MedicalServices />,
       color: "#06b6d4",
     },
     {
-      type: DoctorSpecialization.CARDIOLOGIST,
+      type: Specialization.CARDIOLOGIST,
       name: "Cardiologist",
       i18nKey: "specialization.cardiologist",
-      doctorCount: 42,
       icon: <Favorite />,
       color: "#ef4444",
     },
     {
-      type: DoctorSpecialization.PSYCHIATRIST,
+      type: Specialization.PSYCHIATRIST,
       name: "Psychiatrist",
       i18nKey: "specialization.psychiatrist",
-      doctorCount: 35,
       icon: <Psychology />,
       color: "#f59e0b",
     },
     {
-      type: DoctorSpecialization.NEUROLOGIST,
+      type: Specialization.NEUROLOGIST,
       name: "Neurologist",
       i18nKey: "specialization.neurologist",
-      doctorCount: 28,
       icon: <BubbleChart />,
       color: "#8b5cf6",
     },
     {
-      type: DoctorSpecialization.DERMATOLOGIST,
+      type: Specialization.DERMATOLOGIST,
       name: "Dermatologist",
       i18nKey: "specialization.dermatologist",
-      doctorCount: 64,
       icon: <SentimentSatisfied />,
       color: "#ec4899",
     },
     {
-      type: DoctorSpecialization.ORTHOPEDIC,
+      type: Specialization.ORTHOPEDIC,
       name: "Orthopedist",
       i18nKey: "specialization.orthopedist",
-      doctorCount: 31,
       icon: <Accessible />,
       color: "#14b8a6",
     },
     {
-      type: DoctorSpecialization.PEDIATRICIAN,
+      type: Specialization.PEDIATRICIAN,
       name: "Pediatrician",
       i18nKey: "specialization.pediatrician",
-      doctorCount: 47,
       icon: <HealthAndSafety />,
       color: "#84cc16",
     },
     {
-      type: DoctorSpecialization.ENT_SPECIALIST,
+      type: Specialization.ENT_SPECIALIST,
       name: "ENT Specialist",
       i18nKey: "specialization.entSpecialist",
-      doctorCount: 22,
       icon: <Hearing />,
       color: "#06b6d4",
     },
     {
-      type: DoctorSpecialization.GYNECOLOGIST,
+      type: Specialization.GYNECOLOGIST,
       name: "Gynecologist",
       i18nKey: "specialization.gynecologist",
-      doctorCount: 38,
       icon: <PregnantWoman />,
       color: "#ec4899",
     },
     {
-      type: DoctorSpecialization.OPHTHALMOLOGIST,
+      type: Specialization.OPHTHALMOLOGIST,
       name: "Ophthalmologist",
       i18nKey: "specialization.ophthalmologist",
-      doctorCount: 29,
       icon: <RemoveRedEye />,
       color: "#3b82f6",
     },
     {
-      type: DoctorSpecialization.UROLOGIST,
+      type: Specialization.UROLOGIST,
       name: "Urologist",
       i18nKey: "specialization.urologist",
-      doctorCount: 19,
       icon: <Spa />,
       color: "#8b5cf6",
     },
     {
-      type: DoctorSpecialization.GASTROENTEROLOGIST,
+      type: Specialization.GASTROENTEROLOGIST,
       name: "Gastroenterologist",
       i18nKey: "specialization.gastroenterologist",
-      doctorCount: 25,
       icon: <Restaurant />,
       color: "#f59e0b",
     },
     {
-      type: DoctorSpecialization.PULMONOLOGIST,
+      type: Specialization.PULMONOLOGIST,
       name: "Pulmonologist",
       i18nKey: "specialization.pulmonologist",
-      doctorCount: 18,
       icon: <Air />,
       color: "#14b8a6",
     },
     {
-      type: DoctorSpecialization.ENDOCRINOLOGIST,
+      type: Specialization.ENDOCRINOLOGIST,
       name: "Endocrinologist",
       i18nKey: "specialization.endocrinologist",
-      doctorCount: 21,
       icon: <Biotech />,
       color: "#a855f7",
     },
     {
-      type: DoctorSpecialization.ONCOLOGIST,
+      type: Specialization.ONCOLOGIST,
       name: "Oncologist",
       i18nKey: "specialization.oncologist",
-      doctorCount: 16,
       icon: <LocalPharmacy />,
       color: "#ef4444",
     },
     {
-      type: DoctorSpecialization.RADIOLOGIST,
+      type: Specialization.RADIOLOGIST,
       name: "Radiologist",
       i18nKey: "specialization.radiologist",
-      doctorCount: 14,
       icon: <Radar />,
       color: "#06b6d4",
     },
     {
-      type: DoctorSpecialization.ANESTHESIOLOGIST,
+      type: Specialization.ANESTHESIOLOGIST,
       name: "Anesthesiologist",
       i18nKey: "specialization.anesthesiologist",
-      doctorCount: 12,
       icon: <Vaccines />,
       color: "#84cc16",
     },
     {
-      type: DoctorSpecialization.PATHOLOGIST,
+      type: Specialization.PATHOLOGIST,
       name: "Pathologist",
       i18nKey: "specialization.pathologist",
-      doctorCount: 10,
       icon: <Science />,
       color: "#8b5cf6",
     },
     {
-      type: DoctorSpecialization.RHEUMATOLOGIST,
+      type: Specialization.RHEUMATOLOGIST,
       name: "Rheumatologist",
       i18nKey: "specialization.rheumatologist",
-      doctorCount: 9,
       icon: <MedicalServices />,
       color: "#f59e0b",
     },
   ];
 
+  const {
+    loading: getSpecsLoading,
+    data: getSpecsData,
+    error: getSpecsError,
+    refetch: getSpecsRefetch,
+  } = useQuery(GET_DOCTORS, {
+    fetchPolicy: "cache-and-network",
+    variables: {
+      input: {
+        page: 1,
+        limit: 1000,
+        sort: "doctorViews",
+        direction: "DESC",
+        search: {},
+      },
+    },
+    notifyOnNetworkStatusChange: true,
+    onCompleted: (data: T) => {
+      setDoctorSpecialization(data?.getDoctors?.list ?? []);
+    },
+  });
+
+  const doctors: Doctor[] = getSpecsData?.getDoctors?.list ?? [];
+  const doctorCountBySpecialization = doctors.reduce<Record<string, number>>(
+    (acc, doctor) => {
+      const key = doctor?.specialization;
+      if (!key) return acc;
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
+
   const initialSpecializations = specializations.slice(0, INITIAL_CARD_COUNT);
   const remainingSpecializations = specializations.slice(INITIAL_CARD_COUNT);
   const hasMore = remainingSpecializations.length > 0;
 
-  const handleSpecializationClick = (type: DoctorSpecialization) => {
-    router.push(`/doctors?specialization=${type}`);
-  };
-
-  const handleSeeAll = () => {
-    setShowAll(true);
-  };
-
-  const handleShowLess = () => {
-    setShowAll(false);
+  const handleSpecializationClick = (type: Specialization) => {
+    router.push(`/doctor?specialization=${type}`);
   };
 
   return (
     <Box className="browse-specialization">
       <Stack className="browse-specialization-container">
-        {/* Header */}
         <Box className="browse-specialization-header">
           <h2 className="browse-specialization-title">
             {t("home.browseBySpecialization")}
@@ -253,7 +241,7 @@ const BrowseBySpecialization = () => {
           {hasMore && !showAll && (
             <button
               className="browse-specialization-see-all"
-              onClick={handleSeeAll}
+              onClick={() => setShowAll(true)}
             >
               {t("common.seeAll")}
             </button>
@@ -261,14 +249,13 @@ const BrowseBySpecialization = () => {
           {hasMore && showAll && (
             <button
               className="browse-specialization-see-all"
-              onClick={handleShowLess}
+              onClick={() => setShowAll(false)}
             >
               {t("common.showLess")}
             </button>
           )}
         </Box>
 
-        {/* Specialization Cards: first 8 */}
         <Box className="browse-specialization-grid">
           {initialSpecializations.map((spec) => (
             <Box
@@ -283,16 +270,18 @@ const BrowseBySpecialization = () => {
                 <Box sx={{ color: spec.color }}>{spec.icon}</Box>
               </Box>
               <Box className="specialization-card-content">
-                <h3 className="specialization-card-title">{t(spec.i18nKey || "", spec.name)}</h3>
+                <h3 className="specialization-card-title">
+                  {t(spec.i18nKey || "", spec.name)}
+                </h3>
                 <p className="specialization-card-count">
-                  {spec.doctorCount} {t("common.doctors")}
+                  {doctorCountBySpecialization[spec.type] ?? 0}{" "}
+                  {t("common.doctors")}
                 </p>
               </Box>
             </Box>
           ))}
         </Box>
 
-        {/* Remaining cards below when "See all" is clicked */}
         {showAll && remainingSpecializations.length > 0 && (
           <Box className="browse-specialization-grid">
             {remainingSpecializations.map((spec) => (
@@ -308,9 +297,12 @@ const BrowseBySpecialization = () => {
                   <Box sx={{ color: spec.color }}>{spec.icon}</Box>
                 </Box>
                 <Box className="specialization-card-content">
-                  <h3 className="specialization-card-title">{t(spec.i18nKey || "", spec.name)}</h3>
+                  <h3 className="specialization-card-title">
+                    {t(spec.i18nKey || "", spec.name)}
+                  </h3>
                   <p className="specialization-card-count">
-                    {spec.doctorCount} {t("common.doctors")}
+                    {doctorCountBySpecialization[spec.type] ?? 0}{" "}
+                    {t("common.doctors")}
                   </p>
                 </Box>
               </Box>

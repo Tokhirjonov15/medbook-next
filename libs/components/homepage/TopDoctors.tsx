@@ -1,5 +1,5 @@
 import { Box, Stack } from "@mui/material";
-import { Star, ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, type Swiper as SwiperType } from "swiper";
@@ -117,10 +117,6 @@ const TopRatedDoctors = ({
                       src={doctor.memberImage || "/img/defaultUser.svg"}
                       alt={doctor.memberFullName || doctor.memberNick}
                     />
-                    <Box className="doctor-card-rating">
-                      <Star />
-                      <span>{doctor.reviewCount || 0}</span>
-                    </Box>
                   </Box>
                   <Box className="doctor-card-content">
                     <h3 className="doctor-card-name">
