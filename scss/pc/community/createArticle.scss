@@ -33,6 +33,45 @@
           }
         }
         .create-form {
+          .toastui-editor-contents {
+            p {
+              img {
+                display: block;
+                margin-top: 12px;
+                margin-bottom: 12px;
+                max-width: 100%;
+              }
+            }
+            img {
+              display: block;
+              margin-top: 12px;
+              margin-bottom: 12px;
+              max-width: 100%;
+            }
+          }
+          .toastui-editor-defaultUI .toastui-editor-mode-switch,
+          .toastui-editor-defaultUI .toastui-editor-tabs,
+          .toastui-editor-defaultUI .tab-item,
+          .toastui-editor-defaultUI .toastui-editor-md-tab-container,
+          .toastui-editor-defaultUI .toastui-editor-ww-tab-container {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+          }
+          .toastui-editor-mode-switch,
+          .toastui-editor-md-tab-container,
+          .toastui-editor-ww-tab-container,
+          .toastui-editor-defaultUI .toastui-editor-mode-switch,
+          .toastui-editor-defaultUI .toastui-editor-tabs,
+          .toastui-editor-defaultUI .tab-item,
+          .toastui-editor-defaultUI .toastui-editor-md-tab-container,
+          .toastui-editor-defaultUI .toastui-editor-ww-tab-container {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+          }
           padding: 40px;
           display: flex;
           flex-direction: column;
@@ -313,3 +352,7 @@
     }
   }
 }
+
+
+
+

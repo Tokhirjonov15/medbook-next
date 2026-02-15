@@ -58,6 +58,29 @@ const getCategoryFallbackImage = (category: BoardArticleCategory): string => {
   return "/img/question.jpg";
 };
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
+const toPlainText = (value: string): string =>
+  String(value || "")
+    .replace(/!\[[^\]]*\]\(([^)]+)\)/g, " ")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) => {
   const { initialInput } = props;
   const router = useRouter();
@@ -99,10 +122,10 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
         category: getCategoryLabel(article.articleCategory),
         author: {
           name: article.memberData?.memberNick || "Unknown",
-          image: article.memberData?.memberImage || "/img/defaultUser.svg",
+          image: toAbsoluteMediaUrl(article.memberData?.memberImage) || "/img/defaultUser.svg",
         },
-        content: article.articleContent,
-        image: article.articleImage || getCategoryFallbackImage(article.articleCategory),
+        content: toPlainText(article.articleContent),
+        image: toAbsoluteMediaUrl(article.articleImage) || getCategoryFallbackImage(article.articleCategory),
         views: article.articleViews || 0,
         likes: article.articleLikes || 0,
         comments: article.articleComments || 0,

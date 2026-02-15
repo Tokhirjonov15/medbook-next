@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
 import {
   Avatar,
   Box,
@@ -33,6 +34,8 @@ import { CommentGroup } from "@/libs/enums/comment.enum";
 import { BoardArticleCategory } from "@/libs/enums/board-article.enum";
 import { userVar } from "@/apollo/store";
 import { sweetErrorHandling, sweetMixinErrorAlert, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+
+const ToastViewerComponent = dynamic(() => import("@/libs/components/community/TViewer"), { ssr: false });
 
 interface GetBoardArticleResponse {
   getBoardArticle: BoardArticle;
@@ -95,6 +98,33 @@ const formatDate = (dateString: string | Date) => {
     day: "numeric",
   });
 };
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
+const normalizeMarkdownForView = (value: string): string =>
+  String(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/write your article content here\.{0,3}/gi, "\n")
+    .replace(/(^|\n)\s*write\s*(?=\n|$)/gi, "\n")
+    .replace(/(^|\n)\s*preview\s*(?=\n|$)/gi, "\n")
+    .replace(/(^|\n)\s*markdown\s*(?=\n|$)/gi, "\n")
+    .replace(/(^|\n)\s*wysiwyg\.?\s*(?=\n|$)/gi, "\n")
+    .replace(/([^\n])(!\[[^\]]*\]\([^)]+\))/g, "$1\n\n$2")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
 const CommunityDetail: NextPage = () => {
   const router = useRouter();
@@ -273,9 +303,11 @@ const CommunityDetail: NextPage = () => {
     );
   }
 
-  const articleImage = article.articleImage || getFallbackImage(article.articleCategory);
+  const contentHasImage = /!\[[^\]]*\]\([^)]+\)/.test(article.articleContent || "");
+  const articleImage = toAbsoluteMediaUrl(article.articleImage);
+  const coverImage = articleImage || (!contentHasImage ? getFallbackImage(article.articleCategory) : "");
   const authorName = article.memberData?.memberNick || "Unknown";
-  const authorImage = article.memberData?.memberImage || "/img/defaultUser.svg";
+  const authorImage = toAbsoluteMediaUrl(article.memberData?.memberImage) || "/img/defaultUser.svg";
   const liked = isLikedByMe(article.meLiked);
 
   return (
@@ -334,14 +366,14 @@ const CommunityDetail: NextPage = () => {
             </Stack>
           </Stack>
 
-          {articleImage && (
+          {coverImage && (
             <Box className="article-image">
-              <img src={articleImage} alt={article.articleTitle} />
+              <img src={coverImage} alt={article.articleTitle} />
             </Box>
           )}
 
           <Stack className="article-content">
-            <div dangerouslySetInnerHTML={{ __html: article.articleContent || "" }} />
+            <ToastViewerComponent markdown={normalizeMarkdownForView(article.articleContent || "")} />
           </Stack>
 
           <Stack className="comments-section">
@@ -359,7 +391,7 @@ const CommunityDetail: NextPage = () => {
               {!getCommentsLoading && !getCommentsError && comments.map((comment) => (
                 <Stack key={comment._id} className="comment-item">
                   <Stack className="comment-header">
-                    <Avatar src={comment.memberData?.memberImage || "/img/defaultUser.svg"} className="comment-avatar" />
+                    <Avatar src={toAbsoluteMediaUrl(comment.memberData?.memberImage) || "/img/defaultUser.svg"} className="comment-avatar" />
                     <Stack className="comment-info">
                       <Typography className="comment-author">{comment.memberData?.memberNick || "Unknown"}</Typography>
                       <Typography className="comment-date">{formatDate(comment.createdAt)}</Typography>
@@ -395,7 +427,7 @@ const CommunityDetail: NextPage = () => {
 
                   {showReplyBox[comment._id] && (
                     <Stack className="reply-box">
-                      <Avatar src={user.memberImage || "/img/defaultUser.svg"} className="reply-avatar" />
+                      <Avatar src={toAbsoluteMediaUrl(user.memberImage) || "/img/defaultUser.svg"} className="reply-avatar" />
                       <TextField
                         multiline
                         rows={2}
@@ -428,7 +460,7 @@ const CommunityDetail: NextPage = () => {
                       {comment.replies.map((reply) => (
                         <Stack key={reply._id} className="reply-item">
                           <Stack className="reply-header">
-                            <Avatar src={reply.memberData?.memberImage || "/img/defaultUser.svg"} className="reply-avatar-small" />
+                            <Avatar src={toAbsoluteMediaUrl(reply.memberData?.memberImage) || "/img/defaultUser.svg"} className="reply-avatar-small" />
                             <Stack className="reply-info">
                               <Typography className="reply-author">{reply.memberData?.memberNick || "Unknown"}</Typography>
                               <Typography className="reply-date">{formatDate(reply.createdAt)}</Typography>
@@ -462,7 +494,7 @@ const CommunityDetail: NextPage = () => {
             </Stack>
 
             <Stack className="write-comment">
-              <Avatar src={user.memberImage || "/img/defaultUser.svg"} className="comment-avatar" />
+              <Avatar src={toAbsoluteMediaUrl(user.memberImage) || "/img/defaultUser.svg"} className="comment-avatar" />
               <TextField
                 multiline
                 rows={3}

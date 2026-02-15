@@ -3,6 +3,11 @@ declare module "*.scss" {
   export default content;
 }
 
+declare module "*.css" {
+  const content: any;
+  export default content;
+}
+
 // Swiper CSS modules
 declare module "swiper/css";
 declare module "swiper/css/pagination";
