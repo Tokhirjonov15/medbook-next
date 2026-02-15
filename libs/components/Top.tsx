@@ -21,6 +21,23 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const DEFAULT_USER_IMAGE = "/img/defaultUser.svg";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
 const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
@@ -61,6 +78,7 @@ const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
   const isActive = (path: string) => {
     return router.pathname === path;
   };
+  const userImage = toAbsoluteMediaUrl(user?.image) || DEFAULT_USER_IMAGE;
 
   return (
     <Stack className={"navbar"}>
@@ -180,8 +198,13 @@ const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
               <>
                 <div className={"login-user"} onClick={handleClick}>
                   <img
-                    src={user.image || "/img/defaultUser.svg"}
+                    src={userImage}
                     alt={user.name}
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (target.src.endsWith(DEFAULT_USER_IMAGE)) return;
+                      target.src = DEFAULT_USER_IMAGE;
+                    }}
                   />
                 </div>
 
@@ -194,19 +217,77 @@ const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
                     mt: "12px",
                     "& .MuiPaper-root": {
                       borderRadius: "12px",
-                      minWidth: "260px",
+                      minWidth: "160px",
+                      width: "160px",
                       boxShadow:
                         "0 10px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)",
+                    },
+                    "& .menu-header": {
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      padding: "10px 8px 8px",
+                      marginBottom: "4px",
+                    },
+                    "& .menu-info": {
+                      width: "100%",
+                      textAlign: "center",
+                    },
+                    "& .menu-name": {
+                      textAlign: "center",
+                    },
+                    "& .menu-divider": {
+                      margin: "0 10px 4px",
+                    },
+                    "& .menu-logout": {
+                      justifyContent: "center",
+                      textAlign: "center",
+                      minHeight: "36px",
                     },
                   }}
                   transformOrigin={{ horizontal: "right", vertical: "top" }}
                   anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                 >
-                  <Box className="menu-header">
-                    <Box className="menu-avatar">
+                  <Box
+                    className="menu-header"
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      padding: "10px 8px 8px",
+                      marginBottom: "4px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Box
+                      className="menu-avatar"
+                      sx={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "50%",
+                        overflow: "hidden",
+                        border: "2px solid #e8ecef",
+                        flexShrink: 0,
+                      }}
+                    >
                       <img
-                        src={user.image || "/img/defaultUser.svg"}
+                        src={userImage}
                         alt={user.name}
+                        style={{
+                          width: "44px",
+                          height: "44px",
+                          objectFit: "cover",
+                          display: "block",
+                          borderRadius: "50%",
+                        }}
+                        onError={(event) => {
+                          const target = event.currentTarget;
+                          if (target.src.endsWith(DEFAULT_USER_IMAGE)) return;
+                          target.src = DEFAULT_USER_IMAGE;
+                        }}
                       />
                     </Box>
                     <Box className="menu-info">

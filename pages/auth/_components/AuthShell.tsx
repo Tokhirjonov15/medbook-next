@@ -86,7 +86,7 @@ const AuthShell = ({
               }}
             >
               <img
-                src="/img/news.png"
+                src="/img/loginimage.jpg"
                 alt="MedBook preview"
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -182,7 +182,15 @@ const AuthShell = ({
               </Link>
             </Stack>
 
-            {children}
+            <Box
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "8px",
+                },
+              }}
+            >
+              {children}
+            </Box>
           </Box>
         </Box>
       </Stack>
