@@ -28,13 +28,14 @@ interface DISearch {
   consultationTypeList?: ConsultationType;
   pricesRange?: PricesRange;
   text?: string;
+  location?: string;
 }
 
 export interface DoctorsInquiry {
   page: number;
   limit: number;
   sort?: string;
-  direction?: Direction;
+  direction?: Direction | "ASC" | "DESC";
   search: DISearch;
 }
 
@@ -47,6 +48,6 @@ export interface MembersInquiry {
   page: number;
   limit: number;
   sort?: string;
-  direction?: Direction;
+  direction?: Direction | "ASC" | "DESC";
   search: MISearch;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Button,
   Checkbox,
@@ -9,43 +9,40 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { ConsultationType } from "@/libs/enums/consultation.enum";
+import { Specialization } from "@/libs/enums/specialization.enum";
 
-const Filter = () => {
-  const [searchText, setSearchText] = useState<string>("");
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [selectedSpecialization, setSelectedSpecialization] =
-    useState<string>("");
-  const [consultationType, setConsultationType] = useState<string[]>([]);
-  const [feeRange, setFeeRange] = useState({
-    min: 50,
-    max: 300,
-  });
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [selectedAvailability, setSelectedAvailability] = useState<string>("");
-
-  const handleReset = () => {
-    setSearchText("");
-    setSelectedLocations([]);
-    setSelectedSpecialization("");
-    setConsultationType([]);
-    setFeeRange({ min: 50, max: 300 });
-    setSelectedRating(null);
-    setSelectedAvailability("");
+interface FilterProps {
+  locationText: string;
+  selectedSpecialization: Specialization | "";
+  consultationType: ConsultationType[];
+  feeRange: {
+    min: number;
+    max: number;
   };
+  onLocationChange: (value: string) => void;
+  onSpecializationChange: (value: Specialization | "") => void;
+  onConsultationTypeChange: (value: ConsultationType[]) => void;
+  onFeeRangeChange: (value: { min: number; max: number }) => void;
+  onReset: () => void;
+}
 
-  const handleLocationChange = (location: string) => {
-    if (selectedLocations.includes(location)) {
-      setSelectedLocations(selectedLocations.filter((loc) => loc !== location));
-    } else {
-      setSelectedLocations([...selectedLocations, location]);
-    }
-  };
-
-  const handleConsultationTypeChange = (type: string) => {
+const Filter = ({
+  locationText,
+  selectedSpecialization,
+  consultationType,
+  feeRange,
+  onLocationChange,
+  onSpecializationChange,
+  onConsultationTypeChange,
+  onFeeRangeChange,
+  onReset,
+}: FilterProps) => {
+  const toggleConsultationType = (type: ConsultationType) => {
     if (consultationType.includes(type)) {
-      setConsultationType(consultationType.filter((t) => t !== type));
+      onConsultationTypeChange(consultationType.filter((t) => t !== type));
     } else {
-      setConsultationType([...consultationType, type]);
+      onConsultationTypeChange([...consultationType, type]);
     }
   };
 
@@ -54,7 +51,7 @@ const Filter = () => {
       <Stack className="find-your-doctor" mb={"40px"}>
         <Typography className="title-main">Filters</Typography>
         <Stack className="clear-all">
-          <Button onClick={handleReset} className="clear-btn">
+          <Button onClick={onReset} className="clear-btn">
             Clear All
           </Button>
         </Stack>
@@ -64,10 +61,11 @@ const Filter = () => {
         <Typography className="title">Location</Typography>
         <Stack className="input-box">
           <OutlinedInput
-            value={searchText}
+            value={locationText}
             type="text"
             className="location-input"
             placeholder="e.g. New York, USA"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onLocationChange(e.target.value)}
           />
         </Stack>
       </Stack>
@@ -77,19 +75,18 @@ const Filter = () => {
         <FormControl fullWidth>
           <Select
             value={selectedSpecialization}
-            onChange={(e) => setSelectedSpecialization(e.target.value)}
+            onChange={(e) => onSpecializationChange(e.target.value as Specialization | "")}
             displayEmpty
             className="specialization-select"
           >
             <MenuItem value="">
               <em>Select specialization</em>
             </MenuItem>
-            <MenuItem value="cardiologist">Cardiologist</MenuItem>
-            <MenuItem value="dermatologist">Dermatologist</MenuItem>
-            <MenuItem value="pediatrician">Pediatrician</MenuItem>
-            <MenuItem value="neurologist">Neurologist</MenuItem>
-            <MenuItem value="orthopedic">Orthopedic</MenuItem>
-            <MenuItem value="psychiatrist">Psychiatrist</MenuItem>
+            {Object.values(Specialization).map((spec) => (
+              <MenuItem key={spec} value={spec}>
+                {spec.replaceAll("_", " ")}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Stack>
@@ -102,8 +99,8 @@ const Filter = () => {
             className="doctor-checkbox"
             color="default"
             size="small"
-            checked={consultationType.includes("both")}
-            onChange={() => handleConsultationTypeChange("both")}
+            checked={consultationType.includes(ConsultationType.BOTH)}
+            onChange={() => toggleConsultationType(ConsultationType.BOTH)}
           />
           <label htmlFor={"both"} style={{ cursor: "pointer" }}>
             <Typography className="doctor-type">Both</Typography>
@@ -115,8 +112,8 @@ const Filter = () => {
             className="doctor-checkbox"
             color="default"
             size="small"
-            checked={consultationType.includes("video")}
-            onChange={() => handleConsultationTypeChange("video")}
+            checked={consultationType.includes(ConsultationType.VIDEO)}
+            onChange={() => toggleConsultationType(ConsultationType.VIDEO)}
           />
           <label htmlFor={"video-consult"} style={{ cursor: "pointer" }}>
             <Typography className="doctor-type">Video Consult</Typography>
@@ -128,8 +125,8 @@ const Filter = () => {
             className="doctor-checkbox"
             color="default"
             size="small"
-            checked={consultationType.includes("clinic")}
-            onChange={() => handleConsultationTypeChange("clinic")}
+            checked={consultationType.includes(ConsultationType.CLINIC)}
+            onChange={() => toggleConsultationType(ConsultationType.CLINIC)}
           />
           <label htmlFor={"clinic-visit"} style={{ cursor: "pointer" }}>
             <Typography className="doctor-type">Clinic Visit</Typography>
@@ -150,9 +147,10 @@ const Filter = () => {
             placeholder="$ min"
             min={0}
             value={feeRange.min}
-            onChange={(e: any) => {
-              if (e.target.value >= 0) {
-                setFeeRange({ ...feeRange, min: Number(e.target.value) });
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (value >= 0) {
+                onFeeRangeChange({ ...feeRange, min: value });
               }
             }}
           />
@@ -161,55 +159,14 @@ const Filter = () => {
             type="number"
             placeholder="$ max"
             value={feeRange.max}
-            onChange={(e: any) => {
-              if (e.target.value >= 0) {
-                setFeeRange({ ...feeRange, max: Number(e.target.value) });
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (value >= 0) {
+                onFeeRangeChange({ ...feeRange, max: value });
               }
             }}
           />
         </Stack>
-      </Stack>
-
-      <Stack className="find-your-doctor">
-        <Typography className="title">Availability</Typography>
-        <Stack className="availability-buttons">
-          <Button
-            className={selectedAvailability === "today" ? "active" : ""}
-            onClick={() =>
-              setSelectedAvailability(
-                selectedAvailability === "today" ? "" : "today",
-              )
-            }
-          >
-            Today
-          </Button>
-          <Button
-            className={selectedAvailability === "tomorrow" ? "active" : ""}
-            onClick={() =>
-              setSelectedAvailability(
-                selectedAvailability === "tomorrow" ? "" : "tomorrow",
-              )
-            }
-          >
-            Tomorrow
-          </Button>
-          <Button
-            className={selectedAvailability === "this-week" ? "active" : ""}
-            onClick={() =>
-              setSelectedAvailability(
-                selectedAvailability === "this-week" ? "" : "this-week",
-              )
-            }
-          >
-            This Week
-          </Button>
-        </Stack>
-      </Stack>
-
-      <Stack className="apply-filter-section" mt={"30px"}>
-        <Button className="apply-filter-btn" fullWidth>
-          Apply Filters
-        </Button>
       </Stack>
     </Stack>
   );
