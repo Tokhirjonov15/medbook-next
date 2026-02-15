@@ -124,7 +124,7 @@ const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
           <Button
             className="book-now-btn"
             variant="contained"
-            onClick={() => router.push("/payment")}
+            onClick={() => router.push(`/payment?id=${doctor._id}`)}
           >
             Book Now
           </Button>
@@ -146,3 +146,4 @@ const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
 };
 
 export default DoctorCard;
+

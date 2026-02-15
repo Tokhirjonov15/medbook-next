@@ -521,7 +521,7 @@ const DoctorDetail: NextPage = () => {
                   )}
                 </Stack>
                 <Typography className="specialization">
-                  {specialization} • {doctor.experience} Years Experience
+                  {specialization} - {doctor.experience} Years Experience
                 </Typography>
                 <Stack className="like-section">
                   <IconButton onClick={likeDoctorHandler} className="like-btn">
@@ -825,7 +825,7 @@ const DoctorDetail: NextPage = () => {
               variant="contained"
               fullWidth
               className="book-btn"
-              onClick={() => router.push("/payment")}
+              onClick={() => router.push(`/payment?id=${doctor._id}`)}
             >
               Book Appointment for ${doctor.consultationFee}
             </Button>
@@ -925,3 +925,7 @@ const DoctorDetail: NextPage = () => {
 };
 
 export default withLayoutMain(DoctorDetail);
+
+
+
+
