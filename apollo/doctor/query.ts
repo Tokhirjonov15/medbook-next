@@ -308,6 +308,11 @@ export const GET_COMMENTS = gql`
         parentCommentId
         commentReplies
         commentLikes
+        meLiked {
+          memberId
+          likeRefId
+          myFavorite
+        }
         memberId
         createdAt
         updatedAt
@@ -320,6 +325,11 @@ export const GET_COMMENTS = gql`
           parentCommentId
           commentReplies
           commentLikes
+          meLiked {
+            memberId
+            likeRefId
+            myFavorite
+          }
           memberId
           createdAt
           updatedAt

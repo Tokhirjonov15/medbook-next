@@ -17,6 +17,6 @@ export interface CommentsInquiry {
   page: number;
   limit: number;
   sort?: string;
-  direction?: Direction;
+  direction?: Direction | "ASC" | "DESC";
   search: CISearch;
 }

@@ -375,53 +375,213 @@
               flex-direction: column;
               gap: 16px;
 
-              .review-item {
+              .comment-item {
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
-                padding: 16px;
+                padding: 20px;
                 background: #f8fafc;
                 border-radius: 12px;
 
-                .review-header {
+                .comment-header {
                   display: flex;
                   flex-direction: row;
                   align-items: center;
                   gap: 12px;
 
-                  .review-avatar {
+                  .comment-avatar {
                     width: 44px;
                     height: 44px;
                   }
 
-                  .review-user-info {
+                  .comment-info {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
                     gap: 2px;
 
-                    .review-user-name {
+                    .comment-author {
                       color: #181a20;
                       font-family: $font;
-                      font-size: 14px;
+                      font-size: 15px;
                       font-weight: 600;
                     }
 
-                    .review-date {
+                    .comment-date {
                       color: #94a3b8;
                       font-family: $font;
-                      font-size: 12px;
+                      font-size: 13px;
                       font-weight: 400;
                     }
                   }
                 }
 
-                .review-comment {
+                .comment-content {
                   color: #475569;
                   font-family: $font;
                   font-size: 14px;
                   font-weight: 400;
                   line-height: 1.6;
+                  padding-left: 56px;
+                }
+
+                .comment-actions-bar {
+                  display: flex;
+                  flex-direction: row;
+                  gap: 10px;
+                  align-items: center;
+                  padding-left: 56px;
+
+                  .comment-action-btn {
+                    color: #64748b;
+                    font-family: $font;
+                    font-size: 13px;
+                    font-weight: 500;
+                    text-transform: none;
+                    padding: 4px 8px;
+                    min-width: auto;
+
+                    &:hover {
+                      background: #e2e8f0;
+                    }
+
+                    .MuiSvgIcon-root {
+                      width: 16px;
+                      height: 16px;
+                    }
+                  }
+                }
+
+                .reply-box {
+                  display: flex;
+                  flex-direction: row;
+                  gap: 12px;
+                  padding-left: 56px;
+                  margin-top: 8px;
+
+                  .reply-avatar {
+                    width: 36px;
+                    height: 36px;
+                    flex-shrink: 0;
+                  }
+
+                  .reply-input {
+                    flex: 1;
+
+                    .MuiOutlinedInput-root {
+                      font-family: $font;
+                      font-size: 14px;
+                      background: #fff;
+                      border-radius: 8px;
+                    }
+                  }
+
+                  .submit-reply-btn {
+                    background: #4361ee;
+                    color: #fff;
+                    font-family: $font;
+                    font-size: 13px;
+                    font-weight: 600;
+                    text-transform: none;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    align-self: flex-end;
+
+                    &:hover {
+                      background: #3651d4;
+                    }
+
+                    &:disabled {
+                      background: #cbd5e1;
+                      color: #94a3b8;
+                    }
+                  }
+                }
+
+                .replies-list {
+                  display: flex;
+                  flex-direction: column;
+                  gap: 16px;
+                  padding-left: 56px;
+                  margin-top: 8px;
+
+                  .reply-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding: 16px;
+                    background: #fff;
+                    border-radius: 8px;
+                    border: 1px solid #e2e8f0;
+
+                    .reply-header {
+                      display: flex;
+                      flex-direction: row;
+                      align-items: center;
+                      gap: 10px;
+
+                      .reply-avatar-small {
+                        width: 36px;
+                        height: 36px;
+                      }
+
+                      .reply-info {
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+
+                        .reply-author {
+                          color: #181a20;
+                          font-family: $font;
+                          font-size: 14px;
+                          font-weight: 600;
+                        }
+
+                        .reply-date {
+                          color: #94a3b8;
+                          font-family: $font;
+                          font-size: 12px;
+                          font-weight: 400;
+                        }
+                      }
+                    }
+
+                    .reply-content {
+                      color: #475569;
+                      font-family: $font;
+                      font-size: 14px;
+                      font-weight: 400;
+                      line-height: 1.6;
+                      padding-left: 46px;
+                    }
+
+                    .reply-actions-bar {
+                      display: flex;
+                      flex-direction: row;
+                      gap: 12px;
+                      padding-left: 46px;
+
+                      .reply-action-btn {
+                        color: #64748b;
+                        font-family: $font;
+                        font-size: 12px;
+                        font-weight: 500;
+                        text-transform: none;
+                        padding: 2px 6px;
+                        min-width: auto;
+
+                        &:hover {
+                          background: #f1f5f9;
+                        }
+
+                        .MuiSvgIcon-root {
+                          width: 14px;
+                          height: 14px;
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
