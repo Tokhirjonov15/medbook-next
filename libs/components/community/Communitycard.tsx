@@ -1,13 +1,14 @@
 import React from "react";
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Stack, Typography } from "@mui/material";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import { useRouter } from "next/router";
 
 interface CommunityCardProps {
   article: {
-    id: number;
+    id: string;
     title: string;
     category: string;
     author: {
@@ -19,11 +20,13 @@ interface CommunityCardProps {
     views: number;
     likes: number;
     comments: number;
-    createdAt: string;
+    createdAt: string | Date;
+    liked?: boolean;
   };
+  onLike?: (articleId: string) => void;
 }
 
-const CommunityCard = ({ article }: CommunityCardProps) => {
+const CommunityCard = ({ article, onLike }: CommunityCardProps) => {
   const router = useRouter();
 
   const getCategoryColor = (category: string) => {
@@ -105,7 +108,20 @@ const CommunityCard = ({ article }: CommunityCardProps) => {
                 <Typography className="stat-count">{article.views}</Typography>
               </Stack>
               <Stack className="stat-item">
-                <FavoriteIcon className="stat-icon" />
+                <IconButton
+                  size="small"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLike?.(article.id);
+                  }}
+                  sx={{ p: 0 }}
+                >
+                  {article.liked ? (
+                    <FavoriteIcon className="stat-icon liked" style={{ color: "#ef4444" }} />
+                  ) : (
+                    <FavoriteBorderIcon className="stat-icon" />
+                  )}
+                </IconButton>
                 <Typography className="stat-count">{article.likes}</Typography>
               </Stack>
               <Stack className="stat-item">

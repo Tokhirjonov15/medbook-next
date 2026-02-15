@@ -121,7 +121,7 @@ const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
         <Stack className="result-count">
           <Typography>{totalDoctors} doctors found</Typography>
           <Typography className="subtitle">
-            Find your doctor from real-time MedBook database
+            Your health is our priority!!
           </Typography>
         </Stack>
 

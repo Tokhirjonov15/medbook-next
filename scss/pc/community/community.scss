@@ -305,6 +305,10 @@
                           width: 18px;
                           height: 18px;
                           color: #94a3b8;
+
+                          &.liked {
+                            color: #ef4444 !important;
+                          }
                         }
 
                         .stat-count {

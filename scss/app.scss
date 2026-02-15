@@ -3,9 +3,29 @@
 @import "reset.scss";
 
 /** VERSION: PC **/
-#pc-wrap {
-  width: 100%;
+html,
+body,
+#__next {
   height: 100%;
+  min-height: 100%;
+}
+
+body {
+  background: #000;
+}
+
+#__next {
+  display: flex;
+  flex-direction: column;
+}
+
+#pc-wrap {
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
   .container {
     position: relative;
     width: 1300px;

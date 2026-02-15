@@ -13,6 +13,8 @@
 @import "../pc/_adminHome/adminPanel.scss";
 
 #pc-wrap {
+  background-color: #f8f9fa;
+
   #top {
     .navbar {
       width: 100%;
@@ -305,10 +307,23 @@
     #main {
       flex: 1;
       background-color: #f8f9fa;
-      min-height: 100vh;
+      min-height: 0;
     }
     #footer {
+      position: relative;
       margin-top: auto;
+      background: #000;
+      flex-shrink: 0;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: 120vh;
+        background: #000;
+      }
     }
   }
 

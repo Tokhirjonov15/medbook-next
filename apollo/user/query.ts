@@ -313,6 +313,11 @@ export const GET_BOARD_ARTICLES = gql`
           likeRefId
           myFavorite
         }
+        memberData {
+          _id
+          memberNick
+          memberImage
+        }
       }
       metaCounter {
         total
@@ -340,6 +345,11 @@ export const GET_BOARD_ARTICLE = gql`
         memberId
         likeRefId
         myFavorite
+      }
+      memberData {
+        _id
+        memberNick
+        memberImage
       }
     }
   }

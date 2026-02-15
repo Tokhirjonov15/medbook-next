@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { NextPage } from "next";
 import {
   Avatar,
   Box,
   Button,
+  CircularProgress,
   Chip,
   IconButton,
   Stack,
@@ -11,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useRouter } from "next/router";
+import { useMutation, useQuery, useReactiveVar } from "@apollo/client";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -18,331 +20,393 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import SendIcon from "@mui/icons-material/Send";
 import ReplyIcon from "@mui/icons-material/Reply";
 import withLayoutMain from "@/libs/components/layout/LayoutMember";
+import { GET_BOARD_ARTICLE, GET_COMMENTS } from "@/apollo/user/query";
+import {
+  CREATE_COMMENT,
+  LIKE_TARGET_BOARD_ARTICLE,
+  LIKE_TARGET_COMMENT,
+} from "@/apollo/user/mutation";
+import { BoardArticle } from "@/libs/types/board-article/board-article";
+import { Comments, Comment } from "@/libs/types/comment/comment";
+import { CommentsInquiry, CommentInput } from "@/libs/types/comment/comment.input";
+import { CommentGroup } from "@/libs/enums/comment.enum";
+import { BoardArticleCategory } from "@/libs/enums/board-article.enum";
+import { userVar } from "@/apollo/store";
+import { sweetErrorHandling, sweetMixinErrorAlert, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
 
-interface Comment {
-  id: number;
-  author: {
-    name: string;
-    image: string;
-  };
-  content: string;
-  createdAt: string;
-  likes: number;
-  replies: Reply[];
+interface GetBoardArticleResponse {
+  getBoardArticle: BoardArticle;
 }
 
-interface Reply {
-  id: number;
-  author: {
-    name: string;
-    image: string;
-  };
-  content: string;
-  createdAt: string;
-  likes: number;
+interface GetBoardArticleVariables {
+  input: string;
 }
+
+interface GetCommentsResponse {
+  getComments: Comments;
+}
+
+interface GetCommentsVariables {
+  input: CommentsInquiry;
+}
+
+interface CreateCommentResponse {
+  createComment: Comment;
+}
+
+interface CreateCommentVariables {
+  input: CommentInput;
+}
+
+const getCategoryColor = (category: BoardArticleCategory) => {
+  if (category === BoardArticleCategory.FREE) return "#22c55e";
+  if (category === BoardArticleCategory.RECOMMEND) return "#3b82f6";
+  if (category === BoardArticleCategory.NEWS) return "#f59e0b";
+  if (category === BoardArticleCategory.QUESTION) return "#8b5cf6";
+  return "#64748b";
+};
+
+const getCategoryLabel = (category: BoardArticleCategory) => {
+  if (category === BoardArticleCategory.FREE) return "Free";
+  if (category === BoardArticleCategory.RECOMMEND) return "Recommend";
+  if (category === BoardArticleCategory.NEWS) return "News";
+  if (category === BoardArticleCategory.QUESTION) return "Question";
+  return "Free";
+};
+
+const getFallbackImage = (category: BoardArticleCategory) => {
+  if (category === BoardArticleCategory.NEWS) return "/img/nws.png";
+  if (category === BoardArticleCategory.FREE) return "/img/free.jpg";
+  if (category === BoardArticleCategory.RECOMMEND) return "/img/recommend.png";
+  return "/img/question.jpg";
+};
+
+const isLikedByMe = (value: any): boolean => {
+  if (!value) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  return Boolean(value?.myFavorite);
+};
+
+const formatDate = (dateString: string | Date) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 const CommunityDetail: NextPage = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const user = useReactiveVar(userVar);
+  const articleId = useMemo(() => {
+    const raw = router.query.id;
+    return Array.isArray(raw) ? raw[0] : raw;
+  }, [router.query.id]);
 
-  const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [replyText, setReplyText] = useState<{ [key: number]: string }>({});
-  const [showReplyBox, setShowReplyBox] = useState<{ [key: number]: boolean }>(
-    {},
+  const [replyTextMap, setReplyTextMap] = useState<Record<string, string>>({});
+  const [showReplyBox, setShowReplyBox] = useState<Record<string, boolean>>({});
+
+  const {
+    loading: getArticleLoading,
+    data: getArticleData,
+    error: getArticleError,
+    refetch: getArticleRefetch,
+  } = useQuery<GetBoardArticleResponse, GetBoardArticleVariables>(GET_BOARD_ARTICLE, {
+    fetchPolicy: "network-only",
+    variables: { input: articleId || "" },
+    notifyOnNetworkStatusChange: true,
+    skip: !articleId,
+  });
+
+  const commentsInput = useMemo<CommentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 100,
+      sort: "createdAt",
+      direction: "DESC",
+      search: {
+        commentRefId: articleId || "",
+      },
+    }),
+    [articleId],
   );
 
-  // Mock data - replace with API call
-  const article = {
-    id: 1,
-    title: "Top 10 Heart Health Tips for 2024",
-    category: "Free",
-    author: {
-      name: "Dr. Sarah Jenkins",
-      image: "/img/defaultUser.svg",
-    },
-    content: `
-      <h2>Introduction</h2>
-      <p>Maintaining heart health is crucial for overall well-being. In this comprehensive guide, we'll explore the top 10 tips to keep your heart healthy in 2024.</p>
-      
-      <h2>1. Regular Exercise</h2>
-      <p>Engage in at least 150 minutes of moderate-intensity aerobic activity or 75 minutes of vigorous-intensity activity per week. Regular exercise strengthens your heart muscle and improves circulation.</p>
-      
-      <h2>2. Balanced Diet</h2>
-      <p>Focus on consuming plenty of fruits, vegetables, whole grains, and lean proteins. Limit saturated fats, trans fats, and sodium intake.</p>
-      
-      <h2>3. Manage Stress</h2>
-      <p>Chronic stress can negatively impact your heart health. Practice relaxation techniques such as meditation, yoga, or deep breathing exercises.</p>
-      
-      <h2>4. Quality Sleep</h2>
-      <p>Aim for 7-9 hours of quality sleep each night. Poor sleep is associated with high blood pressure and increased risk of heart disease.</p>
-      
-      <h2>5. Regular Check-ups</h2>
-      <p>Schedule regular health screenings and check your blood pressure, cholesterol levels, and blood sugar regularly.</p>
-    `,
-    image: "/img/banner/header1.svg",
-    views: 1234,
-    likes: 89,
-    createdAt: "2024-02-08",
+  const {
+    loading: getCommentsLoading,
+    data: getCommentsData,
+    error: getCommentsError,
+    refetch: getCommentsRefetch,
+  } = useQuery<GetCommentsResponse, GetCommentsVariables>(GET_COMMENTS, {
+    fetchPolicy: "cache-and-network",
+    variables: { input: commentsInput },
+    notifyOnNetworkStatusChange: true,
+    skip: !articleId,
+  });
+
+  const [likeTargetBoardArticle, { loading: likeArticleLoading }] = useMutation(LIKE_TARGET_BOARD_ARTICLE);
+  const [createComment, { loading: createCommentLoading }] = useMutation<CreateCommentResponse, CreateCommentVariables>(CREATE_COMMENT);
+  const [likeTargetComment, { loading: likeCommentLoading }] = useMutation(LIKE_TARGET_COMMENT);
+
+  const article = getArticleData?.getBoardArticle;
+  const comments = (getCommentsData?.getComments?.list ?? []).filter(
+    (comment) => comment.commentGroup === CommentGroup.ARTICLE && !comment.parentCommentId,
+  );
+
+  const handleLikeArticle = async () => {
+    try {
+      if (!articleId) return;
+      if (!user?._id) {
+        await sweetMixinErrorAlert("Please login first");
+        return;
+      }
+
+      await likeTargetBoardArticle({
+        variables: { input: articleId },
+      });
+      await getArticleRefetch();
+      await sweetTopSmallSuccessAlert("Success!", 800);
+    } catch (err: any) {
+      sweetErrorHandling(err).then();
+    }
   };
 
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: 1,
-      author: {
-        name: "John Doe",
-        image: "/img/defaultUser.svg",
-      },
-      content: "Great article! Very informative and helpful.",
-      createdAt: "2024-02-08",
-      likes: 12,
-      replies: [
-        {
-          id: 1,
-          author: {
-            name: "Dr. Sarah Jenkins",
-            image: "/img/defaultUser.svg",
+  const handleCommentSubmit = async () => {
+    try {
+      if (!articleId) return;
+      if (!user?._id) {
+        await sweetMixinErrorAlert("Please login first");
+        return;
+      }
+      if (!commentText.trim()) return;
+
+      await createComment({
+        variables: {
+          input: {
+            commentGroup: CommentGroup.ARTICLE,
+            commentContent: commentText.trim(),
+            commentRefId: articleId,
           },
-          content: "Thank you! I'm glad you found it helpful.",
-          createdAt: "2024-02-08",
-          likes: 5,
         },
-      ],
-    },
-    {
-      id: 2,
-      author: {
-        name: "Jane Smith",
-        image: "/img/defaultUser.svg",
-      },
-      content: "I've been following these tips and already feel better!",
-      createdAt: "2024-02-07",
-      likes: 8,
-      replies: [],
-    },
-  ]);
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Free":
-        return "#22c55e";
-      case "Recommend":
-        return "#3b82f6";
-      case "News":
-        return "#f59e0b";
-      case "Question":
-        return "#8b5cf6";
-      default:
-        return "#64748b";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    // TODO: API call to like/unlike article
-  };
-
-  const handleCommentSubmit = () => {
-    if (commentText.trim()) {
-      const newComment: Comment = {
-        id: comments.length + 1,
-        author: {
-          name: "Current User",
-          image: "/img/defaultUser.svg",
-        },
-        content: commentText,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        replies: [],
-      };
-      setComments([newComment, ...comments]);
+      });
       setCommentText("");
-      // TODO: API call to submit comment
+      await Promise.all([
+        getCommentsRefetch({ input: commentsInput }),
+        getArticleRefetch(),
+      ]);
+      await sweetTopSmallSuccessAlert("Comment posted", 800);
+    } catch (err: any) {
+      sweetErrorHandling(err).then();
     }
   };
 
-  const handleReplySubmit = (commentId: number) => {
-    const replyContent = replyText[commentId];
-    if (replyContent?.trim()) {
-      const newReply: Reply = {
-        id: Date.now(),
-        author: {
-          name: "Current User",
-          image: "/img/defaultUser.svg",
+  const toggleReplyBox = (commentId: string) => {
+    setShowReplyBox((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
+  };
+
+  const handleReplySubmit = async (commentId: string) => {
+    try {
+      if (!articleId || !commentId) return;
+      if (!user?._id) {
+        await sweetMixinErrorAlert("Please login first");
+        return;
+      }
+      const reply = (replyTextMap[commentId] || "").trim();
+      if (!reply) return;
+
+      await createComment({
+        variables: {
+          input: {
+            commentGroup: CommentGroup.COMMENT,
+            commentContent: reply,
+            commentRefId: articleId,
+            parentCommentId: commentId,
+          },
         },
-        content: replyContent,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-      };
+      });
 
-      setComments(
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, replies: [...comment.replies, newReply] }
-            : comment,
-        ),
-      );
-
-      setReplyText({ ...replyText, [commentId]: "" });
-      setShowReplyBox({ ...showReplyBox, [commentId]: false });
-      // TODO: API call to submit reply
+      setReplyTextMap((prev) => ({ ...prev, [commentId]: "" }));
+      setShowReplyBox((prev) => ({ ...prev, [commentId]: false }));
+      await Promise.all([
+        getCommentsRefetch({ input: commentsInput }),
+        getArticleRefetch(),
+      ]);
+      await sweetTopSmallSuccessAlert("Reply posted", 800);
+    } catch (err: any) {
+      sweetErrorHandling(err).then();
     }
   };
 
-  const toggleReplyBox = (commentId: number) => {
-    setShowReplyBox({
-      ...showReplyBox,
-      [commentId]: !showReplyBox[commentId],
-    });
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      if (!commentId) return;
+      if (!user?._id) {
+        await sweetMixinErrorAlert("Please login first");
+        return;
+      }
+
+      await likeTargetComment({ variables: { input: commentId } });
+      await getCommentsRefetch({ input: commentsInput });
+      await sweetTopSmallSuccessAlert("Success!", 800);
+    } catch (err: any) {
+      sweetErrorHandling(err).then();
+    }
   };
+
+  if (!articleId || getArticleLoading) {
+    return (
+      <Stack sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: "70vh" }}>
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
+
+  if (getArticleError || !article) {
+    return (
+      <Stack sx={{ width: "100%", minHeight: "60vh", justifyContent: "center", alignItems: "center" }}>
+        <Typography>Failed to load article details.</Typography>
+      </Stack>
+    );
+  }
+
+  const articleImage = article.articleImage || getFallbackImage(article.articleCategory);
+  const authorName = article.memberData?.memberNick || "Unknown";
+  const authorImage = article.memberData?.memberImage || "/img/defaultUser.svg";
+  const liked = isLikedByMe(article.meLiked);
 
   return (
     <div id="community-detail-page">
       <Stack className="detail-container">
         <Stack className="detail-content">
-          {/* Article Header */}
+          {(likeArticleLoading || createCommentLoading || likeCommentLoading) && (
+            <Stack
+              sx={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 10,
+                background: "rgba(255,255,255,0.55)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress size={"3rem"} />
+            </Stack>
+          )}
+
           <Stack className="article-header">
             <Chip
-              label={article.category}
+              label={getCategoryLabel(article.articleCategory)}
               className="category-badge"
-              sx={{ backgroundColor: getCategoryColor(article.category) }}
+              sx={{ backgroundColor: getCategoryColor(article.articleCategory) }}
             />
-            <Typography className="article-title">{article.title}</Typography>
+            <Typography className="article-title">{article.articleTitle}</Typography>
 
-            {/* Author Info */}
             <Stack className="author-meta">
               <Stack className="author-section">
-                <Avatar
-                  src={article.author.image}
-                  alt={article.author.name}
-                  className="author-avatar"
-                />
+                <Avatar src={authorImage} alt={authorName} className="author-avatar" />
                 <Stack className="author-info">
-                  <Typography className="author-name">
-                    {article.author.name}
-                  </Typography>
-                  <Typography className="publish-date">
-                    {formatDate(article.createdAt)}
-                  </Typography>
+                  <Typography className="author-name">{authorName}</Typography>
+                  <Typography className="publish-date">{formatDate(article.createdAt)}</Typography>
                 </Stack>
               </Stack>
 
               <Stack className="article-stats">
                 <Stack className="stat-item">
                   <RemoveRedEyeIcon className="stat-icon" />
-                  <Typography className="stat-count">
-                    {article.views}
-                  </Typography>
+                  <Typography className="stat-count">{article.articleViews || 0}</Typography>
                 </Stack>
                 <Stack className="stat-item">
-                  <IconButton onClick={handleLike} className="like-btn">
-                    {isLiked ? (
-                      <FavoriteIcon className="liked" />
-                    ) : (
-                      <FavoriteBorderIcon />
-                    )}
+                  <IconButton onClick={handleLikeArticle} className="like-btn">
+                    {liked ? <FavoriteIcon className="liked" /> : <FavoriteBorderIcon />}
                   </IconButton>
-                  <Typography className="stat-count">
-                    {article.likes + (isLiked ? 1 : 0)}
-                  </Typography>
+                  <Typography className="stat-count">{article.articleLikes || 0}</Typography>
                 </Stack>
                 <Stack className="stat-item">
                   <ChatBubbleOutlineIcon className="stat-icon" />
-                  <Typography className="stat-count">
-                    {comments.length}
-                  </Typography>
+                  <Typography className="stat-count">{article.articleComments || comments.length}</Typography>
                 </Stack>
               </Stack>
             </Stack>
           </Stack>
 
-          {/* Article Image */}
-          {article.image && (
+          {articleImage && (
             <Box className="article-image">
-              <img src={article.image} alt={article.title} />
+              <img src={articleImage} alt={article.articleTitle} />
             </Box>
           )}
 
-          {/* Article Content */}
           <Stack className="article-content">
-            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            <div dangerouslySetInnerHTML={{ __html: article.articleContent || "" }} />
           </Stack>
 
-          {/* Comments Section */}
           <Stack className="comments-section">
             <Typography className="section-title">
-              Comments ({comments.length})
+              Comments ({article.articleComments || comments.length})
             </Typography>
 
-            {/* Comments List */}
             <Stack className="comments-list">
-              {comments.map((comment) => (
-                <Stack key={comment.id} className="comment-item">
+              {getCommentsLoading && <CircularProgress size={"1.5rem"} />}
+              {getCommentsError && <Typography>Failed to load comments.</Typography>}
+              {!getCommentsLoading && !getCommentsError && comments.length === 0 && (
+                <Typography>No comments yet.</Typography>
+              )}
+
+              {!getCommentsLoading && !getCommentsError && comments.map((comment) => (
+                <Stack key={comment._id} className="comment-item">
                   <Stack className="comment-header">
-                    <Avatar
-                      src={comment.author.image}
-                      className="comment-avatar"
-                    />
+                    <Avatar src={comment.memberData?.memberImage || "/img/defaultUser.svg"} className="comment-avatar" />
                     <Stack className="comment-info">
-                      <Typography className="comment-author">
-                        {comment.author.name}
-                      </Typography>
-                      <Typography className="comment-date">
-                        {formatDate(comment.createdAt)}
-                      </Typography>
+                      <Typography className="comment-author">{comment.memberData?.memberNick || "Unknown"}</Typography>
+                      <Typography className="comment-date">{formatDate(comment.createdAt)}</Typography>
                     </Stack>
                   </Stack>
 
-                  <Typography className="comment-content">
-                    {comment.content}
-                  </Typography>
+                  <Typography className="comment-content">{comment.commentContent}</Typography>
 
                   <Stack className="comment-actions-bar">
                     <Button
                       size="small"
-                      startIcon={<FavoriteBorderIcon />}
+                      startIcon={
+                        isLikedByMe(comment.meLiked) ? (
+                          <FavoriteIcon sx={{ color: "#ef4444" }} />
+                        ) : (
+                          <FavoriteBorderIcon />
+                        )
+                      }
                       className="comment-action-btn"
+                      onClick={() => handleLikeComment(comment._id)}
                     >
-                      {comment.likes}
+                      {comment.commentLikes || 0}
                     </Button>
                     <Button
                       size="small"
                       startIcon={<ReplyIcon />}
                       className="comment-action-btn"
-                      onClick={() => toggleReplyBox(comment.id)}
+                      onClick={() => toggleReplyBox(comment._id)}
                     >
                       Reply
                     </Button>
                   </Stack>
 
-                  {/* Reply Box */}
-                  {showReplyBox[comment.id] && (
+                  {showReplyBox[comment._id] && (
                     <Stack className="reply-box">
-                      <Avatar
-                        src="/img/defaultUser.svg"
-                        className="reply-avatar"
-                      />
+                      <Avatar src={user.memberImage || "/img/defaultUser.svg"} className="reply-avatar" />
                       <TextField
                         multiline
                         rows={2}
                         fullWidth
                         placeholder="Write a reply..."
-                        value={replyText[comment.id] || ""}
+                        value={replyTextMap[comment._id] || ""}
                         onChange={(e) =>
-                          setReplyText({
-                            ...replyText,
-                            [comment.id]: e.target.value,
-                          })
+                          setReplyTextMap((prev) => ({
+                            ...prev,
+                            [comment._id]: e.target.value,
+                          }))
                         }
                         className="reply-input"
                       />
@@ -350,8 +414,8 @@ const CommunityDetail: NextPage = () => {
                         variant="contained"
                         size="small"
                         endIcon={<SendIcon />}
-                        onClick={() => handleReplySubmit(comment.id)}
-                        disabled={!replyText[comment.id]?.trim()}
+                        onClick={() => handleReplySubmit(comment._id)}
+                        disabled={!replyTextMap[comment._id]?.trim()}
                         className="submit-reply-btn"
                       >
                         Reply
@@ -359,37 +423,34 @@ const CommunityDetail: NextPage = () => {
                     </Stack>
                   )}
 
-                  {/* Replies List */}
-                  {comment.replies.length > 0 && (
+                  {comment.replies && comment.replies.length > 0 && (
                     <Stack className="replies-list">
                       {comment.replies.map((reply) => (
-                        <Stack key={reply.id} className="reply-item">
+                        <Stack key={reply._id} className="reply-item">
                           <Stack className="reply-header">
-                            <Avatar
-                              src={reply.author.image}
-                              className="reply-avatar-small"
-                            />
+                            <Avatar src={reply.memberData?.memberImage || "/img/defaultUser.svg"} className="reply-avatar-small" />
                             <Stack className="reply-info">
-                              <Typography className="reply-author">
-                                {reply.author.name}
-                              </Typography>
-                              <Typography className="reply-date">
-                                {formatDate(reply.createdAt)}
-                              </Typography>
+                              <Typography className="reply-author">{reply.memberData?.memberNick || "Unknown"}</Typography>
+                              <Typography className="reply-date">{formatDate(reply.createdAt)}</Typography>
                             </Stack>
                           </Stack>
 
-                          <Typography className="reply-content">
-                            {reply.content}
-                          </Typography>
+                          <Typography className="reply-content">{reply.commentContent}</Typography>
 
                           <Stack className="reply-actions-bar">
                             <Button
                               size="small"
-                              startIcon={<FavoriteBorderIcon />}
+                              startIcon={
+                                isLikedByMe(reply.meLiked) ? (
+                                  <FavoriteIcon sx={{ color: "#ef4444" }} />
+                                ) : (
+                                  <FavoriteBorderIcon />
+                                )
+                              }
                               className="reply-action-btn"
+                              onClick={() => handleLikeComment(reply._id)}
                             >
-                              {reply.likes}
+                              {reply.commentLikes || 0}
                             </Button>
                           </Stack>
                         </Stack>
@@ -400,9 +461,8 @@ const CommunityDetail: NextPage = () => {
               ))}
             </Stack>
 
-            {/* Write Comment */}
             <Stack className="write-comment">
-              <Avatar src="/img/defaultUser.svg" className="comment-avatar" />
+              <Avatar src={user.memberImage || "/img/defaultUser.svg"} className="comment-avatar" />
               <TextField
                 multiline
                 rows={3}
