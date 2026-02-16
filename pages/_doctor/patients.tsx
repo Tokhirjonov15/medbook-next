@@ -1,43 +1,234 @@
-import React, { useMemo, useState } from "react";
-import { Box, OutlinedInput, Pagination, Typography } from "@mui/material";
+import React, { useEffect, useMemo, useState } from "react";
+import { Box, CircularProgress, OutlinedInput, Pagination, Stack, Typography } from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 import PatientCard, { PatientCardData } from "@/libs/components/_doctorsHome/PatientCard";
+import { useApolloClient, useQuery, useReactiveVar } from "@apollo/client";
+import { doctorVar } from "@/apollo/store";
+import {
+  GET_DOCTOR_APPOINTMENTS,
+  GET_MEMBER,
+  GET_MEMBER_FOLLOWERS,
+  GET_MEMBER_FOLLOWINGS,
+} from "@/apollo/doctor/query";
+import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
+import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
+import { Member } from "@/libs/types/members/member";
+import { FollowInquiry } from "@/libs/types/follow/follow.input";
+import { Followers, Followings } from "@/libs/types/follow/follow";
 
-const mockPatients: PatientCardData[] = [
-  { id: 1, name: "Sarah Jenkins", followers: 120, followings: 42, likes: 310, createdAt: "2026-02-12T09:30:00Z" },
-  { id: 2, name: "Michael Chen", followers: 88, followings: 21, likes: 204, createdAt: "2026-02-11T08:10:00Z" },
-  { id: 3, name: "Emily Davis", followers: 64, followings: 35, likes: 150, createdAt: "2026-02-10T14:00:00Z" },
-  { id: 4, name: "David Wilson", followers: 176, followings: 70, likes: 420, createdAt: "2026-02-09T12:45:00Z" },
-  { id: 5, name: "Jessica Garcia", followers: 92, followings: 49, likes: 231, createdAt: "2026-02-08T10:20:00Z" },
-  { id: 6, name: "Robert Miller", followers: 73, followings: 33, likes: 178, createdAt: "2026-02-07T16:15:00Z" },
-  { id: 7, name: "Olivia Brown", followers: 134, followings: 58, likes: 356, createdAt: "2026-02-06T09:10:00Z" },
-  { id: 8, name: "Daniel Kim", followers: 101, followings: 28, likes: 262, createdAt: "2026-02-05T11:40:00Z" },
-  { id: 9, name: "Nora White", followers: 59, followings: 22, likes: 145, createdAt: "2026-02-04T13:30:00Z" },
-  { id: 10, name: "Anthony Young", followers: 149, followings: 64, likes: 389, createdAt: "2026-02-03T15:10:00Z" },
-  { id: 11, name: "Hannah Lee", followers: 111, followings: 44, likes: 280, createdAt: "2026-02-02T10:05:00Z" },
-  { id: 12, name: "James Anderson", followers: 96, followings: 39, likes: 241, createdAt: "2026-02-01T09:25:00Z" },
-  { id: 13, name: "Grace Thompson", followers: 127, followings: 53, likes: 334, createdAt: "2026-01-31T12:20:00Z" },
-  { id: 14, name: "Christopher Hall", followers: 167, followings: 72, likes: 441, createdAt: "2026-01-30T08:55:00Z" },
-  { id: 15, name: "Sofia Martinez", followers: 84, followings: 36, likes: 201, createdAt: "2026-01-29T14:35:00Z" },
-  { id: 16, name: "Ethan Clark", followers: 112, followings: 47, likes: 294, createdAt: "2026-01-28T16:45:00Z" },
-  { id: 17, name: "Mia Rodriguez", followers: 98, followings: 41, likes: 246, createdAt: "2026-01-27T10:50:00Z" },
-  { id: 18, name: "Lucas Perez", followers: 141, followings: 66, likes: 372, createdAt: "2026-01-26T11:15:00Z" },
-];
+interface GetDoctorAppointmentsResponse {
+  getDoctorAppointments: Appointments;
+}
+
+interface GetDoctorAppointmentsVariables {
+  input: AppointmentsInquiry;
+}
+
+interface GetMemberResponse {
+  getMember: Member;
+}
+
+interface GetMemberVariables {
+  input: string;
+}
+
+interface GetFollowersResponse {
+  getMemberFollowers: Followers;
+}
+
+interface GetFollowingsResponse {
+  getMemberFollowings: Followings;
+}
+
+interface GetFollowVariables {
+  input: FollowInquiry;
+}
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const DoctorPatients: NextPage = () => {
   const router = useRouter();
+  const apolloClient = useApolloClient();
+  const doctor = useReactiveVar(doctorVar);
+  const doctorId = doctor?._id || "";
+
   const [searchText, setSearchText] = useState<string>("");
   const [sortBy, setSortBy] = useState<"newest" | "latest">("newest");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [memberDetailsMap, setMemberDetailsMap] = useState<Record<string, Member>>({});
+  const [followCountsMap, setFollowCountsMap] = useState<
+    Record<string, { followers: number; followings: number }>
+  >({});
   const itemsPerPage = 8;
+
+  const appointmentsInput = useMemo<AppointmentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 1000,
+      sort: "appointmentDate",
+      direction: "DESC",
+      search: { doctorId },
+    }),
+    [doctorId],
+  );
+
+  const {
+    loading: getDoctorAppointmentsLoading,
+    data: getDoctorAppointmentsData,
+    error: getDoctorAppointmentsError,
+  } = useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+    GET_DOCTOR_APPOINTMENTS,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: { input: appointmentsInput },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
+    },
+  );
+
+  const uniquePatientsBase = useMemo(() => {
+    const list = getDoctorAppointmentsData?.getDoctorAppointments?.list ?? [];
+    const map = new Map<string, Appointment["patientData"]>();
+
+    list.forEach((appointment: Appointment) => {
+      const patientData = appointment.patientData;
+      const patientId = patientData?._id || appointment.patient;
+      if (!patientId) return;
+      if (!map.has(patientId)) {
+        map.set(patientId, patientData);
+      }
+    });
+
+    return Array.from(map.entries()).map(([id, patientData]) => ({
+      id,
+      patientData,
+    }));
+  }, [getDoctorAppointmentsData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchMembers = async () => {
+      if (!uniquePatientsBase.length) {
+        if (!cancelled) {
+          setMemberDetailsMap({});
+          setFollowCountsMap({});
+        }
+        return;
+      }
+
+      const detailEntries = await Promise.all(
+        uniquePatientsBase.map(async ({ id }) => {
+          try {
+            const { data } = await apolloClient.query<GetMemberResponse, GetMemberVariables>({
+              query: GET_MEMBER,
+              variables: { input: id },
+              fetchPolicy: "network-only",
+            });
+            return [id, data?.getMember] as const;
+          } catch {
+            return [id, undefined] as const;
+          }
+        }),
+      );
+
+      const followCountEntries = await Promise.all(
+        uniquePatientsBase.map(async ({ id }) => {
+          try {
+            const [followersRes, followingsRes] = await Promise.all([
+              apolloClient.query<GetFollowersResponse, GetFollowVariables>({
+                query: GET_MEMBER_FOLLOWERS,
+                variables: {
+                  input: {
+                    page: 1,
+                    limit: 1,
+                    search: { followingId: id },
+                  },
+                },
+                fetchPolicy: "network-only",
+              }),
+              apolloClient.query<GetFollowingsResponse, GetFollowVariables>({
+                query: GET_MEMBER_FOLLOWINGS,
+                variables: {
+                  input: {
+                    page: 1,
+                    limit: 1,
+                    search: { followerId: id },
+                  },
+                },
+                fetchPolicy: "network-only",
+              }),
+            ]);
+            return [
+              id,
+              {
+                followers:
+                  followersRes.data?.getMemberFollowers?.metaCounter?.[0]?.total ?? 0,
+                followings:
+                  followingsRes.data?.getMemberFollowings?.metaCounter?.[0]?.total ?? 0,
+              },
+            ] as const;
+          } catch {
+            return [id, { followers: 0, followings: 0 }] as const;
+          }
+        }),
+      );
+
+      if (cancelled) return;
+      const nextMap: Record<string, Member> = {};
+      detailEntries.forEach(([id, member]) => {
+        if (member) nextMap[id] = member;
+      });
+      const nextFollowCounts: Record<string, { followers: number; followings: number }> = {};
+      followCountEntries.forEach(([id, counts]) => {
+        nextFollowCounts[id] = counts;
+      });
+      setMemberDetailsMap(nextMap);
+      setFollowCountsMap(nextFollowCounts);
+    };
+
+    fetchMembers().catch(() => null);
+    return () => {
+      cancelled = true;
+    };
+  }, [apolloClient, uniquePatientsBase]);
+
+  const patients = useMemo<PatientCardData[]>(() => {
+    return uniquePatientsBase.map(({ id, patientData }) => {
+      const memberDetail = memberDetailsMap[id];
+      return {
+        id,
+        name: memberDetail?.memberNick || patientData?.memberNick || "Unknown Patient",
+        image:
+          toAbsoluteMediaUrl(memberDetail?.memberImage || patientData?.memberImage) ||
+          "/img/defaultUser.svg",
+        followers: followCountsMap[id]?.followers ?? memberDetail?.memberFollowers ?? 0,
+        followings: followCountsMap[id]?.followings ?? memberDetail?.memberFollowings ?? 0,
+        likes: memberDetail?.memberLikes || 0,
+        createdAt: String(memberDetail?.createdAt || patientData?.createdAt || new Date().toISOString()),
+      };
+    });
+  }, [uniquePatientsBase, memberDetailsMap, followCountsMap]);
 
   const filteredPatients = useMemo(() => {
     const search = searchText.trim();
-    let result = [...mockPatients];
+    let result = [...patients];
 
     if (search) {
       const regex = new RegExp(escapeRegex(search), "i");
@@ -51,7 +242,7 @@ const DoctorPatients: NextPage = () => {
     });
 
     return result;
-  }, [searchText, sortBy]);
+  }, [patients, searchText, sortBy]);
 
   const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -67,6 +258,14 @@ const DoctorPatients: NextPage = () => {
     setSortBy(value);
     setCurrentPage(1);
   };
+
+  if (!doctorId || getDoctorAppointmentsLoading) {
+    return (
+      <Stack sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: "70vh" }}>
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
 
   return (
     <Box className="doctor-patients">
@@ -98,13 +297,20 @@ const DoctorPatients: NextPage = () => {
 
       <Box className="doctor-patients__list-wrap">
         <Box className="doctor-patients__list">
-          {visiblePatients.map((patient) => (
-            <PatientCard
-              key={patient.id}
-              patient={patient}
-              onNameClick={(id) => router.push(`/_doctor/patients/detail?id=${id}`)}
-            />
-          ))}
+          {getDoctorAppointmentsError && (
+            <Typography>Failed to load patients.</Typography>
+          )}
+          {!getDoctorAppointmentsError && visiblePatients.length === 0 && (
+            <Typography>No patients found.</Typography>
+          )}
+          {!getDoctorAppointmentsError &&
+            visiblePatients.map((patient) => (
+              <PatientCard
+                key={patient.id}
+                patient={patient}
+                onNameClick={(id) => router.push(`/_doctor/patients/detail?id=${id}`)}
+              />
+            ))}
         </Box>
 
         <Box className="doctor-patients__footer">

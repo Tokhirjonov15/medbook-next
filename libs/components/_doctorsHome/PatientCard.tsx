@@ -2,8 +2,9 @@ import React from "react";
 import { Avatar, Box, Stack, Typography } from "@mui/material";
 
 export interface PatientCardData {
-  id: number;
+  id: string;
   name: string;
+  image?: string;
   followers: number;
   followings: number;
   likes: number;
@@ -12,7 +13,7 @@ export interface PatientCardData {
 
 interface PatientCardProps {
   patient: PatientCardData;
-  onNameClick?: (id: number) => void;
+  onNameClick?: (id: string) => void;
 }
 
 const PatientCard = ({ patient, onNameClick }: PatientCardProps) => {
@@ -25,7 +26,12 @@ const PatientCard = ({ patient, onNameClick }: PatientCardProps) => {
   return (
     <Box className="doctor-patient-card">
       <Stack direction="row" spacing={1.5} alignItems="center" className="doctor-patient-card__head">
-        <Avatar src="/img/defaultUser.svg" className="doctor-patient-card__avatar" />
+        <Avatar
+          src={patient.image || "/img/defaultUser.svg"}
+          className="doctor-patient-card__avatar"
+          sx={{ cursor: "pointer" }}
+          onClick={() => onNameClick?.(patient.id)}
+        />
         <Box>
           <button
             type="button"
