@@ -1,53 +1,141 @@
-import React from "react";
-import { Avatar, Box, Divider, Stack, Typography } from "@mui/material";
+import React, { useMemo } from "react";
+import { Avatar, Box, CircularProgress, Divider, Stack, Typography } from "@mui/material";
 import { useRouter } from "next/router";
+import { useQuery, useReactiveVar } from "@apollo/client";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 import { NextPage } from "next";
+import { doctorVar } from "@/apollo/store";
+import { GET_DOCTOR_APPOINTMENTS } from "@/apollo/doctor/query";
+import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
+import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
+import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
 
-type AppointmentDetail = {
-  id: string;
-  patientName: string;
-  appointmentType: string;
-  status: "Confirmed" | "Pending";
-  date: string;
-  time: string;
-  phone: string;
-  email: string;
-  note: string;
+interface GetDoctorAppointmentsResponse {
+  getDoctorAppointments: Appointments;
+}
+
+interface GetDoctorAppointmentsVariables {
+  input: AppointmentsInquiry;
+}
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
 };
 
-const mockAppointmentDetails: Record<string, AppointmentDetail> = {
-  "1": {
-    id: "1",
-    patientName: "Sarah Connor",
-    appointmentType: "General Checkup",
-    status: "Confirmed",
-    date: "Thursday, February 12, 2026",
-    time: "10:00 AM - 10:45 AM",
-    phone: "+1 (555) 120-0110",
-    email: "s.connor@example.com",
-    note:
-      "Patient reported occasional fatigue and mild headaches. Review blood pressure trend and hydration routine.",
-  },
-  "2": {
-    id: "2",
-    patientName: "Michael Ross",
-    appointmentType: "Follow-up Visit",
-    status: "Pending",
-    date: "Saturday, February 14, 2026",
-    time: "01:30 PM - 02:10 PM",
-    phone: "+1 (555) 120-0220",
-    email: "m.ross@example.com",
-    note:
-      "Follow-up on previous treatment plan. Confirm medication response and schedule next review.",
-  },
+const toStatusLabel = (status?: AppointmentStatus) =>
+  String(status || "")
+    .replaceAll("_", " ")
+    .replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+
+const resolveStatusView = (status?: AppointmentStatus) => {
+  if (
+    status === AppointmentStatus.CONFIRMED ||
+    status === AppointmentStatus.IN_PROGRESS ||
+    status === AppointmentStatus.COMPLETED
+  ) {
+    return "confirmed";
+  }
+  return "pending";
 };
 
 const DoctorAppointmentDetail: NextPage = () => {
   const router = useRouter();
+  const doctor = useReactiveVar(doctorVar);
+  const doctorId = doctor?._id || "";
   const rawId = router.query.id;
   const appointmentId = Array.isArray(rawId) ? rawId[0] : rawId;
-  const detail = appointmentId ? mockAppointmentDetails[appointmentId] : undefined;
+
+  const appointmentsInput = useMemo<AppointmentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 500,
+      sort: "appointmentDate",
+      direction: "DESC",
+      search: { doctorId },
+    }),
+    [doctorId],
+  );
+
+  const {
+    loading: getAppointmentsLoading,
+    data: getAppointmentsData,
+    error: getAppointmentsError,
+  } = useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+    GET_DOCTOR_APPOINTMENTS,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: { input: appointmentsInput },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
+    },
+  );
+
+  const detail = useMemo<Appointment | undefined>(() => {
+    if (!appointmentId) return undefined;
+    return (getAppointmentsData?.getDoctorAppointments?.list ?? []).find(
+      (item) => item._id === appointmentId,
+    );
+  }, [appointmentId, getAppointmentsData]);
+
+  const patientName = detail?.patientData?.memberNick || "Unknown Patient";
+  const patientId = detail?.patientData?._id || detail?.patient || "";
+  const patientImage =
+    toAbsoluteMediaUrl(detail?.patientData?.memberImage) || "/img/defaultUser.svg";
+  const appointmentType = String(detail?.consultationType || "").replaceAll("_", " ");
+  const statusLabel = toStatusLabel(detail?.status);
+  const statusClass = resolveStatusView(detail?.status);
+  const dateLabel = detail?.appointmentDate
+    ? new Date(detail.appointmentDate).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "-";
+  const timeLabel = `${detail?.timeSlot?.start || "-"} - ${detail?.timeSlot?.end || "-"}`;
+  const phoneLabel = detail?.patientData?.memberPhone || "-";
+  const reasonLabel = detail?.reason || "-";
+  const symptomsLabel =
+    detail?.symptoms?.length
+      ? detail.symptoms.join(", ")
+      : detail?.notes?.trim() || "-";
+  const paymentLabel = detail?.paymentStatus || "-";
+  const bookedAtLabel = detail?.createdAt
+    ? new Date(detail.createdAt).toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "-";
+
+  if (!doctorId || getAppointmentsLoading) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
 
   return (
     <Box className="doctor-appointment-detail">
@@ -78,7 +166,7 @@ const DoctorAppointmentDetail: NextPage = () => {
         </button>
       </Stack>
 
-      {!detail ? (
+      {getAppointmentsError || !detail ? (
         <Box className="doctor-appointment-detail__empty">
           <Typography variant="h6">Appointment not found</Typography>
           <Typography variant="body2">
@@ -88,22 +176,40 @@ const DoctorAppointmentDetail: NextPage = () => {
       ) : (
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <Box className="doctor-appointment-detail__card doctor-appointment-detail__main-card">
-            <Stack direction="row" spacing={2} alignItems="center" className="doctor-appointment-detail__patient-head">
-              <Avatar src="/img/defaultUser.svg" className="doctor-appointment-detail__avatar" />
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              className="doctor-appointment-detail__patient-head"
+            >
+              <Avatar
+                src={patientImage}
+                className="doctor-appointment-detail__avatar"
+                sx={{ cursor: patientId ? "pointer" : "default" }}
+                onClick={() =>
+                  patientId
+                    ? router.push(`/_doctor/patients/detail?id=${patientId}`)
+                    : null
+                }
+              />
               <Box>
-                <Typography className="doctor-appointment-detail__patient-name">
-                  {detail.patientName}
+                <Typography
+                  className="doctor-appointment-detail__patient-name"
+                  sx={{ cursor: patientId ? "pointer" : "default" }}
+                  onClick={() =>
+                    patientId
+                      ? router.push(`/_doctor/patients/detail?id=${patientId}`)
+                      : null
+                  }
+                >
+                  {patientName}
                 </Typography>
                 <Typography className="doctor-appointment-detail__patient-type">
-                  {detail.appointmentType}
+                  {appointmentType || "-"}
                 </Typography>
               </Box>
-              <Box
-                className={`doctor-appointment-detail__status ${
-                  detail.status === "Confirmed" ? "confirmed" : "pending"
-                }`}
-              >
-                {detail.status}
+              <Box className={`doctor-appointment-detail__status ${statusClass}`}>
+                {statusLabel || "Pending"}
               </Box>
             </Stack>
 
@@ -113,19 +219,25 @@ const DoctorAppointmentDetail: NextPage = () => {
               <Box className="doctor-appointment-detail__row">
                 <Typography className="doctor-appointment-detail__label">Appointment ID</Typography>
                 <Typography className="doctor-appointment-detail__value">
-                  #{detail.id}
+                  #{detail._id}
                 </Typography>
               </Box>
               <Box className="doctor-appointment-detail__row">
                 <Typography className="doctor-appointment-detail__label">Date</Typography>
                 <Typography className="doctor-appointment-detail__value">
-                  {detail.date}
+                  {dateLabel}
                 </Typography>
               </Box>
               <Box className="doctor-appointment-detail__row">
                 <Typography className="doctor-appointment-detail__label">Time</Typography>
                 <Typography className="doctor-appointment-detail__value">
-                  {detail.time}
+                  {timeLabel}
+                </Typography>
+              </Box>
+              <Box className="doctor-appointment-detail__row">
+                <Typography className="doctor-appointment-detail__label">Booked At</Typography>
+                <Typography className="doctor-appointment-detail__value">
+                  {bookedAtLabel}
                 </Typography>
               </Box>
             </Stack>
@@ -139,22 +251,29 @@ const DoctorAppointmentDetail: NextPage = () => {
               <Box className="doctor-appointment-detail__row">
                 <Typography className="doctor-appointment-detail__label">Phone</Typography>
                 <Typography className="doctor-appointment-detail__value">
-                  {detail.phone}
+                  {phoneLabel}
                 </Typography>
               </Box>
               <Box className="doctor-appointment-detail__row">
-                <Typography className="doctor-appointment-detail__label">Email</Typography>
+                <Typography className="doctor-appointment-detail__label">Payment</Typography>
                 <Typography className="doctor-appointment-detail__value">
-                  {detail.email}
+                  {paymentLabel}
                 </Typography>
               </Box>
             </Stack>
 
             <Typography className="doctor-appointment-detail__section-title doctor-appointment-detail__section-title--note">
-              Clinical Note
+              Reason
             </Typography>
             <Typography className="doctor-appointment-detail__note">
-              {detail.note}
+              {reasonLabel}
+            </Typography>
+
+            <Typography className="doctor-appointment-detail__section-title doctor-appointment-detail__section-title--note">
+              Symptoms / Notes
+            </Typography>
+            <Typography className="doctor-appointment-detail__note">
+              {symptomsLabel}
             </Typography>
           </Box>
         </Stack>

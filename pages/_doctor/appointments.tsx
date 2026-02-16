@@ -1,18 +1,24 @@
-import React, { CSSProperties, useEffect, useMemo, useState } from "react";
-import { Box, IconButton, Stack, Typography } from "@mui/material";
+import React, { CSSProperties, useMemo, useState } from "react";
+import { Box, CircularProgress, IconButton, Stack, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import { useQuery, useReactiveVar } from "@apollo/client";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 import { NextPage } from "next";
+import { doctorVar } from "@/apollo/store";
+import { GET_DOCTOR_APPOINTMENTS } from "@/apollo/doctor/query";
+import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
+import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
+import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
 
 type Day = {
   date: Date;
   label: string;
 };
 
-type Appointment = {
+type CalendarAppointment = {
   id: string;
   start: Date;
   end: Date;
@@ -21,6 +27,14 @@ type Appointment = {
   color: string;
   bg: string;
 };
+
+interface GetDoctorAppointmentsResponse {
+  getDoctorAppointments: Appointments;
+}
+
+interface GetDoctorAppointmentsVariables {
+  input: AppointmentsInquiry;
+}
 
 const times = [
   "09:00 AM",
@@ -59,12 +73,6 @@ const addMonths = (value: Date, months: number) => {
 };
 
 const mondayIndex = (day: number) => (day === 0 ? 6 : day - 1);
-
-const makeDateAtHour = (base: Date, dayOffset: number, hour: number, minute: number) => {
-  const value = addDays(startOfDay(base), dayOffset);
-  value.setHours(hour, minute, 0, 0);
-  return value;
-};
 
 const getWeekDays = (baseDate: Date): Day[] => {
   const dayStart = startOfDay(baseDate);
@@ -109,41 +117,102 @@ const formatTimeRange = (start: Date, end: Date) =>
     hour12: false,
   }).format(end)}`;
 
+const toTime = (base: Date, hhmm?: string, fallbackHour = 9) => {
+  const value = new Date(base);
+  if (hhmm && /^\d{2}:\d{2}$/.test(hhmm)) {
+    const [h, m] = hhmm.split(":").map(Number);
+    value.setHours(h, m, 0, 0);
+    return value;
+  }
+  value.setHours(fallbackHour, 0, 0, 0);
+  return value;
+};
+
+const statusStyle = (status?: AppointmentStatus) => {
+  switch (status) {
+    case AppointmentStatus.COMPLETED:
+      return { color: "#0f766e", bg: "#d1fae5" };
+    case AppointmentStatus.CANCELLED:
+    case AppointmentStatus.NO_SHOW:
+      return { color: "#b91c1c", bg: "#fee2e2" };
+    case AppointmentStatus.IN_PROGRESS:
+      return { color: "#1d4ed8", bg: "#dbeafe" };
+    case AppointmentStatus.CONFIRMED:
+      return { color: "#7c3aed", bg: "#ede9fe" };
+    default:
+      return { color: "#0369a1", bg: "#e0f2fe" };
+  }
+};
+
 const DoctorAppointments: NextPage = () => {
   const router = useRouter();
+  const doctor = useReactiveVar(doctorVar);
+  const doctorId = doctor?._id || "";
   const [viewMode, setViewMode] = useState<"month" | "week">("week");
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
-  const baseDate = currentDate ?? new Date();
-
-  useEffect(() => {
-    setCurrentDate(new Date());
-  }, []);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const baseDate = currentDate;
 
   const weekDays = useMemo(() => getWeekDays(baseDate), [baseDate]);
   const monthDays = useMemo(() => getMonthGridDays(baseDate), [baseDate]);
-  const appointments = useMemo<Appointment[]>(() => {
-    const weekStart = weekDays[0]?.date ?? startOfDay(baseDate);
-    return [
-      {
-        id: "1",
-        start: makeDateAtHour(weekStart, 1, 10, 0),
-        end: makeDateAtHour(weekStart, 1, 10, 45),
-        patient: "Sarah Connor",
-        subtitle: "General Checkup",
-        color: "#0f766e",
-        bg: "#d1fae5",
+
+  const dateRange = useMemo(() => {
+    if (viewMode === "week") {
+      const from = startOfDay(weekDays[0].date);
+      const to = addDays(startOfDay(weekDays[6].date), 1);
+      return { from, to };
+    }
+    const from = startOfDay(monthDays[0].date);
+    const to = addDays(startOfDay(monthDays[monthDays.length - 1].date), 1);
+    return { from, to };
+  }, [viewMode, weekDays, monthDays]);
+
+  const appointmentInput = useMemo<AppointmentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 300,
+      sort: "appointmentDate",
+      direction: "DESC",
+      search: {
+        doctorId,
+        dateFrom: dateRange.from,
+        dateTo: dateRange.to,
       },
-      {
-        id: "2",
-        start: makeDateAtHour(weekStart, 3, 13, 30),
-        end: makeDateAtHour(weekStart, 3, 14, 10),
-        patient: "Michael Ross",
-        subtitle: "Follow-up Visit",
-        color: "#1d4ed8",
-        bg: "#dbeafe",
-      },
-    ];
-  }, [baseDate, weekDays]);
+    }),
+    [doctorId, dateRange.from, dateRange.to],
+  );
+
+  const {
+    loading: getDoctorAppointmentsLoading,
+    data: getDoctorAppointmentsData,
+    error: getDoctorAppointmentsError,
+  } = useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+    GET_DOCTOR_APPOINTMENTS,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: { input: appointmentInput },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
+    },
+  );
+
+  const appointments = useMemo<CalendarAppointment[]>(() => {
+    const list = getDoctorAppointmentsData?.getDoctorAppointments?.list ?? [];
+    return list.map((item: Appointment) => {
+      const date = new Date(item.appointmentDate);
+      const start = toTime(date, item.timeSlot?.start, 9);
+      const end = toTime(date, item.timeSlot?.end, start.getHours() + 1);
+      const style = statusStyle(item.status);
+      return {
+        id: item._id,
+        start,
+        end,
+        patient: item.patientData?.memberNick || "Unknown Patient",
+        subtitle: item.reason || item.consultationType || "",
+        color: style.color,
+        bg: style.bg,
+      };
+    });
+  }, [getDoctorAppointmentsData]);
 
   const visibleWeekAppointments = useMemo(() => {
     const weekStart = weekDays[0]?.date;
@@ -156,21 +225,17 @@ const DoctorAppointments: NextPage = () => {
       const startMs = item.start.getTime();
       return startMs >= weekStartMs && startMs < weekEndMs;
     });
-  }, [weekDays]);
+  }, [appointments, weekDays]);
 
   const onPrev = () => {
     setCurrentDate((prev) =>
-      viewMode === "month"
-        ? addMonths(prev ?? new Date(), -1)
-        : addDays(prev ?? new Date(), -7),
+      viewMode === "month" ? addMonths(prev, -1) : addDays(prev, -7),
     );
   };
 
   const onNext = () => {
     setCurrentDate((prev) =>
-      viewMode === "month"
-        ? addMonths(prev ?? new Date(), 1)
-        : addDays(prev ?? new Date(), 7),
+      viewMode === "month" ? addMonths(prev, 1) : addDays(prev, 7),
     );
   };
 
@@ -178,8 +243,36 @@ const DoctorAppointments: NextPage = () => {
     router.push(`/_doctor/appoinments/detail?id=${id}`);
   };
 
-  if (!currentDate) {
-    return <Box className="doctor-appointments" />;
+  if (!doctorId || getDoctorAppointmentsLoading) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
+
+  if (getDoctorAppointmentsError) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <Typography>Failed to load appointments.</Typography>
+      </Stack>
+    );
   }
 
   return (
