@@ -21,10 +21,26 @@ interface DoctorCardProps {
   query: any;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
 const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
   const router = useRouter();
   const user = useReactiveVar(userVar);
-  const imagePath: string = doctor.memberImage || "/img/defaultUser.svg";
+  const imagePath: string =
+    toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg";
   const doctorName = doctor.memberFullName || doctor.memberNick;
   const specializationRaw = Array.isArray(doctor.specialization)
     ? doctor.specialization

@@ -186,6 +186,7 @@ const DoctorCustomerService: NextPage = () => {
                   <Typography className="section-title">3. Contact</Typography>
                   <ul className="terms-list">
                     <li>Email: support@medbook.com</li>
+                    <li>Email: mntokhirjonov@gmail.com</li>
                     <li>Phone: +8210 2076 7640</li>
                   </ul>
                 </Stack>

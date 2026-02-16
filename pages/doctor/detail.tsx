@@ -118,6 +118,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.REACT_APP_API_URL ||
   "http://localhost:3004";
+const WEEKLY_HOURS_CACHE_KEY_PREFIX = "doctor-mypage-weekly-hours-v1:";
 
 const toAbsoluteMediaUrl = (value?: string): string => {
   const src = String(value || "").trim();
@@ -127,6 +128,38 @@ const toAbsoluteMediaUrl = (value?: string): string => {
   if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
   if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
   return src;
+};
+
+type CachedWorkDay = {
+  key: string;
+  label: string;
+  enabled: boolean;
+  morningStart: string;
+  morningEnd: string;
+  afternoonStart: string;
+  afternoonEnd: string;
+};
+
+const DAY_META: Array<{ key: string; day: string; label: string }> = [
+  { key: "mon", day: "MONDAY", label: "Monday" },
+  { key: "tue", day: "TUESDAY", label: "Tuesday" },
+  { key: "wed", day: "WEDNESDAY", label: "Wednesday" },
+  { key: "thu", day: "THURSDAY", label: "Thursday" },
+  { key: "fri", day: "FRIDAY", label: "Friday" },
+  { key: "sat", day: "SATURDAY", label: "Saturday" },
+  { key: "sun", day: "SUNDAY", label: "Sunday" },
+];
+
+const tabToCategory = (tabIndex: number): string => {
+  if (tabIndex === 1) return "reviews";
+  if (tabIndex === 2) return "availability";
+  return "about";
+};
+
+const categoryToTab = (category?: string): number => {
+  if (category === "reviews") return 1;
+  if (category === "availability") return 2;
+  return 0;
 };
 
 function TabPanel(props: TabPanelProps) {
@@ -169,6 +202,13 @@ export const DoctorDetailPage: NextPage = () => {
   const [repliesByParentId, setRepliesByParentId] = useState<Record<string, Comment[]>>({});
 
   React.useEffect(() => {
+    const rawCategory = router.query.category;
+    const category = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory;
+    if (category === "about" || category === "reviews" || category === "availability") {
+      setTabValue(categoryToTab(category));
+      return;
+    }
+
     const rawTab = router.query.tab;
     const tab = Array.isArray(rawTab) ? rawTab[0] : rawTab;
 
@@ -311,9 +351,50 @@ export const DoctorDetailPage: NextPage = () => {
   const likeCount = doctor?.memberLikes ?? 0;
   const followerCount = doctor?.memberFollowers ?? 0;
   const followingCount = doctor?.memberFollowings ?? 0;
+  const workingDays = doctor?.workingDays ?? [];
+
+  const availabilityRows = useMemo(() => {
+    const globalWorkStart = doctor?.workingHours?.[0] || "Not set";
+    const globalWorkEnd = doctor?.workingHours?.[1] || "Not set";
+    const globalBreakStart = doctor?.breakTime?.[0] || "Not set";
+    const globalBreakEnd = doctor?.breakTime?.[1] || "Not set";
+
+    let cachedRows: CachedWorkDay[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(`${WEEKLY_HOURS_CACHE_KEY_PREFIX}${doctorId}`);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed)) cachedRows = parsed as CachedWorkDay[];
+      } catch {
+        cachedRows = [];
+      }
+    }
+
+    return DAY_META
+      .filter((meta) => workingDays.includes(meta.day))
+      .map((meta) => {
+        const cached = cachedRows.find((row) => row.key === meta.key);
+        return {
+          key: meta.key,
+          label: meta.label,
+          workStart: cached?.morningStart || globalWorkStart,
+          breakStart: cached?.morningEnd || globalBreakStart,
+          breakEnd: cached?.afternoonStart || globalBreakEnd,
+          workEnd: cached?.afternoonEnd || globalWorkEnd,
+        };
+      });
+  }, [doctor?.breakTime, doctor?.workingHours, doctorId, workingDays]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    const nextCategory = tabToCategory(newValue);
+    const nextQuery = { ...router.query, category: nextCategory };
+    delete (nextQuery as any).tab;
+    router.replace(
+      { pathname: router.pathname, query: nextQuery },
+      undefined,
+      { shallow: true, scroll: false },
+    );
   };
 
   const likeDoctorHandler = async () => {
@@ -615,8 +696,6 @@ export const DoctorDetailPage: NextPage = () => {
     .map((value) => String(value).replaceAll("_", " "))
     .join(", ");
   const languages = doctor.languages ?? [];
-  const workingDays = doctor.workingDays ?? [];
-  const workingHours = doctor.workingHours?.join(", ") || "Not set";
 
   return (
     <div id="doctor-detail-page">
@@ -978,18 +1057,48 @@ export const DoctorDetailPage: NextPage = () => {
             <TabPanel value={tabValue} index={2}>
               <Stack className="availability-content">
                 <Stack className="section">
-                  <Typography className="section-title">Working Days</Typography>
-                  <Stack className="working-days-list">
-                    {workingDays.length === 0 && <Typography>Not set</Typography>}
-                    {workingDays.map((day, index) => (
-                      <Chip key={`${day}-${index}`} label={day} className="day-chip" />
-                    ))}
-                  </Stack>
-                </Stack>
-
-                <Stack className="section">
-                  <Typography className="section-title">Working Hours</Typography>
-                  <Typography className="working-hours">{workingHours}</Typography>
+                  <Typography className="section-title">Availability By Day</Typography>
+                  {availabilityRows.length === 0 && <Typography>Not set</Typography>}
+                  {availabilityRows.length > 0 && (
+                    <Stack spacing={1}>
+                      <Stack
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "120px repeat(4, minmax(80px, 1fr))",
+                          gap: 1,
+                          color: "#64748b",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Day</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Work Start</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Break Start</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Break End</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Work End</Typography>
+                      </Stack>
+                      {availabilityRows.map((row) => (
+                        <Stack
+                          key={row.key}
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: "120px repeat(4, minmax(80px, 1fr))",
+                            gap: 1,
+                            alignItems: "center",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "10px",
+                            padding: "10px 12px",
+                          }}
+                        >
+                          <Typography sx={{ fontWeight: 600 }}>{row.label}</Typography>
+                          <Typography>{row.workStart}</Typography>
+                          <Typography>{row.breakStart}</Typography>
+                          <Typography>{row.breakEnd}</Typography>
+                          <Typography>{row.workEnd}</Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  )}
                 </Stack>
               </Stack>
             </TabPanel>
