@@ -21,7 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { useMutation, useQuery, useReactiveVar } from "@apollo/client";
+import { useApolloClient, useMutation, useQuery, useReactiveVar } from "@apollo/client";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -55,7 +55,7 @@ import { CommentUpdate } from "@/libs/types/comment/comment.update";
 import { CommentGroup } from "@/libs/enums/comment.enum";
 import { FollowInquiry } from "@/libs/types/follow/follow.input";
 import { Followers, Followings } from "@/libs/types/follow/follow";
-import { userVar } from "@/apollo/store";
+import { doctorVar, userVar } from "@/apollo/store";
 import {
   sweetErrorHandling,
   sweetMixinSuccessAlert,
@@ -114,6 +114,21 @@ interface UpdateCommentVariables {
   input: CommentUpdate;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
@@ -129,21 +144,49 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const DoctorDetail: NextPage = () => {
+export const DoctorDetailPage: NextPage = () => {
   const router = useRouter();
+  const apolloClient = useApolloClient();
   const user = useReactiveVar(userVar);
+  const doctorAuth = useReactiveVar(doctorVar);
+  const actorId = user._id || doctorAuth._id || "";
+  const actorImage =
+    toAbsoluteMediaUrl(user.memberImage || doctorAuth.memberImage) ||
+    "/img/defaultUser.svg";
+  const isDoctorPanelRoute = router.pathname.startsWith("/_doctor");
   const doctorId = useMemo(() => {
     const raw = router.query.id;
     return Array.isArray(raw) ? raw[0] : raw;
   }, [router.query.id]);
 
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(isDoctorPanelRoute ? 1 : 0);
   const [reviewText, setReviewText] = useState("");
   const [followersOpen, setFollowersOpen] = useState(false);
   const [followingsOpen, setFollowingsOpen] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string>("");
   const [editingCommentText, setEditingCommentText] = useState<string>("");
   const [replyTextMap, setReplyTextMap] = useState<Record<string, string>>({});
+  const [repliesByParentId, setRepliesByParentId] = useState<Record<string, Comment[]>>({});
+
+  React.useEffect(() => {
+    const rawTab = router.query.tab;
+    const tab = Array.isArray(rawTab) ? rawTab[0] : rawTab;
+
+    if (tab === "reviews") {
+      setTabValue(1);
+      return;
+    }
+    if (tab === "availability") {
+      setTabValue(2);
+      return;
+    }
+    if (tab === "about") {
+      setTabValue(0);
+      return;
+    }
+
+    if (isDoctorPanelRoute) setTabValue(1);
+  }, [router.query.tab, isDoctorPanelRoute]);
 
   const {
     loading: getDoctorLoading,
@@ -234,12 +277,34 @@ const DoctorDetail: NextPage = () => {
   const [likeTargetComment] = useMutation(LIKE_TARGET_COMMENT);
 
   const doctor = getDoctorData?.getDoctor;
-  const reviews = (getCommentsData?.getComments?.list ?? []).filter(
+  const allDoctorComments = getCommentsData?.getComments?.list ?? [];
+  const reviews = allDoctorComments.filter(
     (comment) =>
       comment.commentGroup === CommentGroup.DOCTOR && !comment.parentCommentId,
   );
+  const replyMapByParent = allDoctorComments.reduce<Record<string, Comment[]>>(
+    (acc, comment) => {
+      if (!comment.parentCommentId) return acc;
+      const parentId = String(comment.parentCommentId);
+      if (!acc[parentId]) acc[parentId] = [];
+      acc[parentId].push(comment);
+      return acc;
+    },
+    {},
+  );
+  const totalReviewItems = reviews.reduce((acc, comment) => {
+    const fallbackReplies = replyMapByParent[comment._id] || [];
+    const extraReplies = repliesByParentId[comment._id] || [];
+    const repliesCount = Math.max(
+      comment.replies?.length || 0,
+      fallbackReplies.length,
+      extraReplies.length,
+    );
+    return acc + 1 + repliesCount;
+  }, 0);
   const followers = getFollowersData?.getMemberFollowers?.list ?? [];
   const followings = getFollowingsData?.getMemberFollowings?.list ?? [];
+  const reviewIdsKey = reviews.map((review) => review._id).join("|");
 
   const liked = Boolean(doctor?.meLiked?.length);
   const followed = Boolean(doctor?.meFollowed?.length);
@@ -254,7 +319,7 @@ const DoctorDetail: NextPage = () => {
   const likeDoctorHandler = async () => {
     try {
       if (!doctorId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
 
       await likeTargetDoctor({ variables: { input: doctorId } });
       await getDoctorRefetch();
@@ -268,7 +333,10 @@ const DoctorDetail: NextPage = () => {
   const followDoctorHandler = async () => {
     try {
       if (!doctorId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
+      if (doctorId === actorId) {
+        throw new Error("You cannot follow yourself.");
+      }
 
       if (followed) {
         await unsubscribeDoctor({ variables: { input: doctorId } });
@@ -291,7 +359,7 @@ const DoctorDetail: NextPage = () => {
   const handleSubmitReview = async () => {
     try {
       if (!doctorId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
       if (!reviewText.trim()) throw new Error(Messages.error3);
 
       await createComment({
@@ -328,7 +396,7 @@ const DoctorDetail: NextPage = () => {
   const saveEditComment = async () => {
     try {
       if (!editingCommentId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
       if (!editingCommentText.trim()) throw new Error(Messages.error4);
 
       await updateComment({
@@ -362,7 +430,7 @@ const DoctorDetail: NextPage = () => {
   const likeCommentHandler = async (commentId: string) => {
     try {
       if (!commentId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
 
       await likeTargetComment({ variables: { input: commentId } });
       await getCommentsRefetch({ input: commentsInput });
@@ -382,7 +450,7 @@ const DoctorDetail: NextPage = () => {
   const replySubmitHandler = async (parentCommentId: string) => {
     try {
       if (!doctorId || !parentCommentId) return;
-      if (!user._id) throw new Error(Messages.error2);
+      if (!actorId) throw new Error(Messages.error2);
 
       const text = (replyTextMap[parentCommentId] || "").trim();
       if (!text) throw new Error(Messages.error4);
@@ -392,13 +460,16 @@ const DoctorDetail: NextPage = () => {
           input: {
             commentGroup: CommentGroup.COMMENT,
             commentContent: text,
-            commentRefId: doctorId,
+            commentRefId: parentCommentId,
             parentCommentId,
           },
         },
       });
 
-      await getCommentsRefetch({ input: commentsInput });
+      await Promise.all([
+        getCommentsRefetch({ input: commentsInput }),
+        fetchRepliesByParentId(parentCommentId),
+      ]);
       await sweetTopSmallSuccessAlert("Reply added", 800);
       setReplyTextMap((prev) => ({ ...prev, [parentCommentId]: "" }));
     } catch (err: any) {
@@ -426,8 +497,8 @@ const DoctorDetail: NextPage = () => {
   ) => {
     try {
       if (!targetId) return;
-      if (!user._id) throw new Error(Messages.error2);
-      if (targetId === user._id) return;
+      if (!actorId) throw new Error(Messages.error2);
+      if (targetId === actorId) return;
 
       const isDoctorTarget = targetType === MemberType.DOCTOR;
       if (isFollowing) {
@@ -454,6 +525,44 @@ const DoctorDetail: NextPage = () => {
       sweetErrorHandling(err).then();
     }
   };
+
+  const openPatientDetail = (memberId?: string) => {
+    if (!isDoctorPanelRoute || !memberId) return;
+    router.push(`/_doctor/patients/detail?id=${memberId}`);
+  };
+
+  const fetchRepliesByParentId = React.useCallback(
+    async (parentId: string) => {
+      if (!parentId) return [];
+      const res = await apolloClient.query<GetCommentsResponse, GetCommentsVariables>({
+        query: GET_COMMENTS,
+        variables: {
+          input: {
+            page: 1,
+            limit: 50,
+            sort: "createdAt",
+            direction: "DESC",
+            search: { commentRefId: parentId },
+          },
+        },
+        fetchPolicy: "network-only",
+      });
+
+      const list = (res.data?.getComments?.list ?? []).filter(
+        (comment) => String(comment.parentCommentId || "") === parentId,
+      );
+      setRepliesByParentId((prev) => ({ ...prev, [parentId]: list }));
+      return list;
+    },
+    [apolloClient],
+  );
+
+  React.useEffect(() => {
+    if (!reviews.length) return;
+    reviews.forEach((review) => {
+      fetchRepliesByParentId(review._id).catch(() => null);
+    });
+  }, [reviewIdsKey, fetchRepliesByParentId]);
 
   if (!doctorId) {
     return (
@@ -495,7 +604,7 @@ const DoctorDetail: NextPage = () => {
     );
   }
 
-  const imagePath = doctor.memberImage || "/img/defaultUser.svg";
+  const imagePath = toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg";
   const doctorName = doctor.memberFullName || doctor.memberNick;
   const specialization = (doctor.specialization || "").replaceAll("_", " ");
   const languages = doctor.languages ?? [];
@@ -536,14 +645,16 @@ const DoctorDetail: NextPage = () => {
                   <Typography className="fee-amount">${doctor.consultationFee}</Typography>
                   <Typography className="fee-label">per consultation</Typography>
                 </Stack>
-                <Button
-                  variant={followed ? "outlined" : "contained"}
-                  startIcon={followed ? <PersonRemoveIcon /> : <PersonAddIcon />}
-                  onClick={followDoctorHandler}
-                  className={followed ? "unfollow-btn" : "follow-btn"}
-                >
-                  {followed ? "Unfollow" : "Follow"}
-                </Button>
+                {doctorId !== actorId ? (
+                  <Button
+                    variant={followed ? "outlined" : "contained"}
+                    startIcon={followed ? <PersonRemoveIcon /> : <PersonAddIcon />}
+                    onClick={followDoctorHandler}
+                    className={followed ? "unfollow-btn" : "follow-btn"}
+                  >
+                    {followed ? "Unfollow" : "Follow"}
+                  </Button>
+                ) : null}
               </Stack>
             </Stack>
 
@@ -638,7 +749,7 @@ const DoctorDetail: NextPage = () => {
 
                 <Stack className="reviews-list">
                   <Typography className="section-title">
-                    All Reviews ({doctor.reviewCount ?? reviews.length})
+                    All Reviews ({totalReviewItems})
                   </Typography>
                   {getCommentsLoading && <CircularProgress size={"1.5rem"} />}
                   {getCommentsError && <Typography>Failed to load reviews.</Typography>}
@@ -651,11 +762,34 @@ const DoctorDetail: NextPage = () => {
                       <Stack key={review._id} className="comment-item">
                         <Stack className="comment-header">
                           <Avatar
-                            src={review.memberData?.memberImage || "/img/defaultUser.svg"}
+                            src={
+                              toAbsoluteMediaUrl(review.memberData?.memberImage) ||
+                              "/img/defaultUser.svg"
+                            }
                             className="comment-avatar"
+                            sx={{
+                              cursor:
+                                isDoctorPanelRoute && review.memberData?._id
+                                  ? "pointer"
+                                  : "default",
+                            }}
+                            onClick={() =>
+                              openPatientDetail(review.memberData?._id)
+                            }
                           />
                           <Stack className="comment-info">
-                            <Typography className="comment-author">
+                            <Typography
+                              className="comment-author"
+                              sx={{
+                                cursor:
+                                  isDoctorPanelRoute && review.memberData?._id
+                                    ? "pointer"
+                                    : "default",
+                              }}
+                              onClick={() =>
+                                openPatientDetail(review.memberData?._id)
+                              }
+                            >
                               {review.memberData?.memberNick || "Unknown"}
                             </Typography>
                             <Typography className="comment-date">
@@ -685,7 +819,7 @@ const DoctorDetail: NextPage = () => {
                           <>
                             <Typography className="comment-content">{review.commentContent}</Typography>
                             <Stack className="comment-actions-bar">
-                              {review.memberId === user._id ? (
+                              {review.memberId === actorId ? (
                                 <Button
                                   size="small"
                                   startIcon={<EditIcon />}
@@ -725,7 +859,7 @@ const DoctorDetail: NextPage = () => {
 
                         {Object.prototype.hasOwnProperty.call(replyTextMap, review._id) && (
                           <Stack className="reply-box">
-                            <Avatar src={user.memberImage || "/img/defaultUser.svg"} className="reply-avatar" />
+                            <Avatar src={actorImage} className="reply-avatar" />
                             <TextField
                               multiline
                               rows={2}
@@ -753,17 +887,51 @@ const DoctorDetail: NextPage = () => {
                           </Stack>
                         )}
 
-                        {review.replies && review.replies.length > 0 && (
+                        {((review.replies && review.replies.length > 0) ||
+                          (replyMapByParent[review._id] &&
+                            replyMapByParent[review._id].length > 0) ||
+                          (repliesByParentId[review._id] &&
+                            repliesByParentId[review._id].length > 0)) && (
                           <Stack className="replies-list">
-                            {review.replies.map((reply) => (
+                            {(
+                              review.replies && review.replies.length > 0
+                                ? review.replies
+                                : replyMapByParent[review._id] &&
+                                    replyMapByParent[review._id].length > 0
+                                  ? replyMapByParent[review._id]
+                                  : repliesByParentId[review._id] || []
+                            ).map((reply) => (
                               <Stack key={reply._id} className="reply-item">
                                 <Stack className="reply-header">
                                   <Avatar
-                                    src={reply.memberData?.memberImage || "/img/defaultUser.svg"}
+                                    src={
+                                      toAbsoluteMediaUrl(reply.memberData?.memberImage) ||
+                                      "/img/defaultUser.svg"
+                                    }
                                     className="reply-avatar-small"
+                                    sx={{
+                                      cursor:
+                                        isDoctorPanelRoute && reply.memberData?._id
+                                          ? "pointer"
+                                          : "default",
+                                    }}
+                                    onClick={() =>
+                                      openPatientDetail(reply.memberData?._id)
+                                    }
                                   />
                                   <Stack className="reply-info">
-                                    <Typography className="reply-author">
+                                    <Typography
+                                      className="reply-author"
+                                      sx={{
+                                        cursor:
+                                          isDoctorPanelRoute && reply.memberData?._id
+                                            ? "pointer"
+                                            : "default",
+                                      }}
+                                      onClick={() =>
+                                        openPatientDetail(reply.memberData?._id)
+                                      }
+                                    >
                                       {reply.memberData?.memberNick || "Unknown"}
                                     </Typography>
                                     <Typography className="reply-date">
@@ -820,16 +988,18 @@ const DoctorDetail: NextPage = () => {
             </TabPanel>
           </Stack>
 
-          <Stack className="book-section">
-            <Button
-              variant="contained"
-              fullWidth
-              className="book-btn"
-              onClick={() => router.push(`/payment?id=${doctor._id}`)}
-            >
-              Book Appointment for ${doctor.consultationFee}
-            </Button>
-          </Stack>
+          {!isDoctorPanelRoute && (
+            <Stack className="book-section">
+              <Button
+                variant="contained"
+                fullWidth
+                className="book-btn"
+                onClick={() => router.push(`/payment?id=${doctor._id}`)}
+              >
+                Book Appointment for ${doctor.consultationFee}
+              </Button>
+            </Stack>
+          )}
         </Stack>
       </Stack>
 
@@ -850,13 +1020,18 @@ const DoctorDetail: NextPage = () => {
             {followers.map((item) => (
               <ListItem key={item._id}>
                 <ListItemAvatar>
-                  <Avatar src={item.followerData?.memberImage || "/img/defaultUser.svg"} />
+                  <Avatar
+                    src={
+                      toAbsoluteMediaUrl(item.followerData?.memberImage) ||
+                      "/img/defaultUser.svg"
+                    }
+                  />
                 </ListItemAvatar>
                 <ListItemText
                   primary={item.followerData?.memberNick || "Unknown"}
                   secondary={item.followerData?.memberType || ""}
                 />
-                {item.followerData?._id && item.followerData._id !== user._id && (
+                {item.followerData?._id && item.followerData._id !== actorId && (
                   <Button
                     size="small"
                     variant={item.meFollowed?.myFollowing ? "outlined" : "contained"}
@@ -894,13 +1069,18 @@ const DoctorDetail: NextPage = () => {
             {followings.map((item) => (
               <ListItem key={item._id}>
                 <ListItemAvatar>
-                  <Avatar src={item.followingData?.memberImage || "/img/defaultUser.svg"} />
+                  <Avatar
+                    src={
+                      toAbsoluteMediaUrl(item.followingData?.memberImage) ||
+                      "/img/defaultUser.svg"
+                    }
+                  />
                 </ListItemAvatar>
                 <ListItemText
                   primary={item.followingData?.memberNick || "Unknown"}
                   secondary={item.followingData?.memberType || ""}
                 />
-                {item.followingData?._id && item.followingData._id !== user._id && (
+                {item.followingData?._id && item.followingData._id !== actorId && (
                   <Button
                     size="small"
                     variant={item.meFollowed?.myFollowing ? "outlined" : "contained"}
@@ -924,7 +1104,7 @@ const DoctorDetail: NextPage = () => {
   );
 };
 
-export default withLayoutMain(DoctorDetail);
+export default withLayoutMain(DoctorDetailPage);
 
 
 

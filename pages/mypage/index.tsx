@@ -530,6 +530,7 @@ const MyPage: NextPage = () => {
     try {
       if (!targetId) return;
       if (!memberId) return;
+      if (targetId === memberId) return;
 
       if (currentlyFollowing) {
         if (targetType === MemberType.DOCTOR) {

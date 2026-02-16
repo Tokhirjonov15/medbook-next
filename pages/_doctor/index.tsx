@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import {
   Avatar,
   Box,
@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Stack,
   Table,
   TableBody,
@@ -14,127 +15,279 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Rating,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PeopleIcon from "@mui/icons-material/People";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
 import { NextPage } from "next";
-import { useReactiveVar } from "@apollo/client";
+import { useQuery, useReactiveVar } from "@apollo/client";
 import { doctorVar } from "@/apollo/store";
+import {
+  GET_COMMENTS,
+  GET_DOCTOR,
+  GET_DOCTOR_APPOINTMENTS,
+} from "@/apollo/doctor/query";
+import { Doctor } from "@/libs/types/doctors/doctor";
+import {
+  Appointments,
+  Appointment,
+} from "@/libs/types/appoinment/appoinment";
+import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
+import { Comments, Comment } from "@/libs/types/comment/comment";
+import { CommentsInquiry } from "@/libs/types/comment/comment.input";
+import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
+import { CommentGroup } from "@/libs/enums/comment.enum";
+
+interface GetDoctorResponse {
+  getDoctor: Doctor;
+}
+
+interface GetDoctorVariables {
+  input: string;
+}
+
+interface GetDoctorAppointmentsResponse {
+  getDoctorAppointments: Appointments;
+}
+
+interface GetDoctorAppointmentsVariables {
+  input: AppointmentsInquiry;
+}
+
+interface GetCommentsResponse {
+  getComments: Comments;
+}
+
+interface GetCommentsVariables {
+  input: CommentsInquiry;
+}
+
+const API_ENDPOINT =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_GRAPHQL_URL ||
+  "http://localhost:3004/graphql";
+
+const API_ROOT = API_ENDPOINT.replace(/\/graphql\/?$/, "");
+
+const resolveMediaUrl = (value?: string) => {
+  if (!value) return "/img/defaultUser.svg";
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (value.startsWith("/uploads")) return `${API_ROOT}${value}`;
+  if (value.startsWith("uploads/")) return `${API_ROOT}/${value}`;
+  return value;
+};
+
+const toReadableStatus = (status?: string) =>
+  (status || "").replaceAll("_", " ");
+
+const resolveAppointmentStatus = (appointment: Appointment): AppointmentStatus => {
+  const status = appointment.status;
+  if (
+    status === AppointmentStatus.COMPLETED ||
+    status === AppointmentStatus.CANCELLED ||
+    status === AppointmentStatus.NO_SHOW
+  ) {
+    return status;
+  }
+
+  const endAt = new Date(appointment.appointmentDate);
+  const end = appointment.timeSlot?.end || appointment.timeSlot?.start;
+
+  if (end && /^\d{2}:\d{2}$/.test(end)) {
+    const [hours, minutes] = end.split(":").map(Number);
+    endAt.setHours(hours, minutes, 0, 0);
+  } else {
+    endAt.setHours(23, 59, 59, 999);
+  }
+
+  if (endAt.getTime() < Date.now()) return AppointmentStatus.COMPLETED;
+  return status;
+};
 
 const DoctorDashboard: NextPage = () => {
   const router = useRouter();
   const doctor = useReactiveVar(doctorVar);
+  const doctorId = doctor?._id || "";
   const doctorName = doctor?.memberFullName || doctor?.memberNick || "Doctor";
 
-  // Mock data - replace with API calls
-  const stats = {
-    totalPatients: 1245,
-    patientsGrowth: 5,
-    todaysAppointments: 8,
-    pendingAppointments: 2,
-    followers: 234,
-    followersGrowth: 12,
-    followings: 45,
-    followingsGrowth: 3,
-  };
+  const recentAppointmentsInput = useMemo<AppointmentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 5,
+      sort: "appointmentDate",
+      direction: "DESC",
+      search: { doctorId },
+    }),
+    [doctorId],
+  );
 
-  const recentAppointments = [
-    {
-      id: 1,
-      patient: {
-        name: "Sarah Jenkins",
-        id: "#P-2458",
-        avatar: "/img/defaultUser.svg",
-      },
-      date: "Oct 24, 2023",
-      time: "09:00 AM",
-      type: "General Checkup",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      patient: {
-        name: "Mike Ross",
-        id: "#P-2459",
-        avatar: "/img/defaultUser.svg",
-      },
-      date: "Oct 24, 2023",
-      time: "10:30 AM",
-      type: "Follow-up",
-      status: "Pending",
-    },
-    {
-      id: 3,
-      patient: {
-        name: "Emily Watson",
-        id: "#P-2460",
-        avatar: "/img/defaultUser.svg",
-      },
-      date: "Oct 24, 2023",
-      time: "01:15 PM",
-      type: "Dermatology",
-      status: "In Progress",
-    },
-  ];
+  const statsAppointmentsInput = useMemo<AppointmentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 200,
+      sort: "createdAt",
+      direction: "DESC",
+      search: { doctorId },
+    }),
+    [doctorId],
+  );
 
-  const patientReviews = [
+  const commentsInput = useMemo<CommentsInquiry>(
+    () => ({
+      page: 1,
+      limit: 3,
+      sort: "createdAt",
+      direction: "DESC",
+      search: { commentRefId: doctorId },
+    }),
+    [doctorId],
+  );
+
+  const { loading: getDoctorLoading, data: getDoctorData, error: getDoctorError } =
+    useQuery<GetDoctorResponse, GetDoctorVariables>(GET_DOCTOR, {
+      fetchPolicy: "cache-and-network",
+      variables: { input: doctorId },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
+    });
+
+  const {
+    loading: getRecentAppointmentsLoading,
+    data: getRecentAppointmentsData,
+  } = useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+    GET_DOCTOR_APPOINTMENTS,
     {
-      id: 1,
-      patient: {
-        name: "John Doe",
-        avatar: "/img/defaultUser.svg",
-      },
-      rating: 5,
-      comment:
-        '"Dr. Smith was very attentive and explained everything clearly. Highly recommended!"',
-      time: "2 days ago",
+      fetchPolicy: "cache-and-network",
+      variables: { input: recentAppointmentsInput },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
     },
-    {
-      id: 2,
-      patient: {
-        name: "Alice Lee",
-        avatar: "/img/defaultUser.svg",
+  );
+
+  const { loading: getStatsAppointmentsLoading, data: getStatsAppointmentsData } =
+    useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+      GET_DOCTOR_APPOINTMENTS,
+      {
+        fetchPolicy: "cache-and-network",
+        variables: { input: statsAppointmentsInput },
+        notifyOnNetworkStatusChange: true,
+        skip: !doctorId,
       },
-      rating: 4,
-      comment:
-        '"Great clinic, but the wait time was a bit longer than expected."',
-      time: "5 days ago",
-    },
-    {
-      id: 3,
-      patient: {
-        name: "Mark K.",
-        avatar: "/img/defaultUser.svg",
-      },
-      rating: 5,
-      comment:
-        '"Professional and caring staff. The online booking system is very convenient."',
-      time: "1 week ago",
-    },
-  ];
+    );
+
+  const { loading: getReviewsLoading, data: getReviewsData, error: getReviewsError } =
+    useQuery<GetCommentsResponse, GetCommentsVariables>(GET_COMMENTS, {
+      fetchPolicy: "cache-and-network",
+      variables: { input: commentsInput },
+      notifyOnNetworkStatusChange: true,
+      skip: !doctorId,
+    });
+
+  const doctorData = getDoctorData?.getDoctor;
+  const recentAppointments = getRecentAppointmentsData?.getDoctorAppointments?.list ?? [];
+  const statAppointments = getStatsAppointmentsData?.getDoctorAppointments?.list ?? [];
+  const patientReviews = (getReviewsData?.getComments?.list ?? []).filter(
+    (review: Comment) =>
+      review.commentGroup === CommentGroup.DOCTOR && !review.parentCommentId,
+  );
+
+  const todaysAppointments = useMemo(() => {
+    const today = new Date();
+    return statAppointments.filter((appointment: Appointment) => {
+      const date = new Date(appointment.appointmentDate);
+      return (
+        date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate()
+      );
+    }).length;
+  }, [statAppointments]);
+
+  const pendingAppointments = useMemo(
+    () =>
+      statAppointments.filter((appointment: Appointment) =>
+        [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED].includes(
+          resolveAppointmentStatus(appointment),
+        ),
+      ).length,
+    [statAppointments],
+  );
+
+  const totalPatients = useMemo(() => {
+    const ids = new Set(
+      statAppointments
+        .map((appointment: Appointment) => appointment.patientData?._id || appointment.patient)
+        .filter(Boolean),
+    );
+    return ids.size;
+  }, [statAppointments]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case AppointmentStatus.COMPLETED:
         return "success";
-      case "Pending":
+      case AppointmentStatus.SCHEDULED:
+      case AppointmentStatus.CONFIRMED:
         return "warning";
-      case "In Progress":
+      case AppointmentStatus.IN_PROGRESS:
         return "info";
+      case AppointmentStatus.CANCELLED:
+      case AppointmentStatus.NO_SHOW:
+        return "error";
       default:
         return "default";
     }
   };
 
-  const handleNewAppointment = () => {
-    // TODO: Open new appointment modal or navigate
-    console.log("New appointment");
-  };
+  if (!doctorId) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
+
+  if (getDoctorLoading || getRecentAppointmentsLoading || getStatsAppointmentsLoading) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <CircularProgress size={"3rem"} />
+      </Stack>
+    );
+  }
+
+  if (getDoctorError || !doctorData) {
+    return (
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
+        <Typography>Failed to load dashboard data.</Typography>
+      </Stack>
+    );
+  }
 
   return (
     <Box className="doctor-dashboard">
@@ -173,12 +326,12 @@ const DoctorDashboard: NextPage = () => {
                   Total Patients
                 </Typography>
                 <Typography variant="h4" fontWeight={700}>
-                  {stats.totalPatients.toLocaleString()}
+                  {totalPatients.toLocaleString()}
                 </Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5} mt={1}>
-                  <TrendingUpIcon sx={{ fontSize: 16, color: "#22c55e" }} />
-                  <Typography variant="caption" color="#22c55e">
-                    +{stats.patientsGrowth}%
+                  <PeopleIcon sx={{ fontSize: 16, color: "#64748b" }} />
+                  <Typography variant="caption" color="text.secondary">
+                    from appointments data
                   </Typography>
                 </Stack>
               </Box>
@@ -211,10 +364,10 @@ const DoctorDashboard: NextPage = () => {
                   Today's Appointments
                 </Typography>
                 <Typography variant="h4" fontWeight={700}>
-                  {stats.todaysAppointments}
+                  {todaysAppointments}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" mt={1}>
-                  {stats.pendingAppointments} pending
+                  {pendingAppointments} pending
                 </Typography>
               </Box>
               <Box
@@ -246,12 +399,11 @@ const DoctorDashboard: NextPage = () => {
                   My Followers
                 </Typography>
                 <Typography variant="h4" fontWeight={700}>
-                  {stats.followers}
+                  {doctorData.memberFollowers || 0}
                 </Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5} mt={1}>
-                  <TrendingUpIcon sx={{ fontSize: 16, color: "#22c55e" }} />
-                  <Typography variant="caption" color="#22c55e">
-                    +{stats.followersGrowth}%
+                  <Typography variant="caption" color="text.secondary">
+                    doctor profile stats
                   </Typography>
                 </Stack>
               </Box>
@@ -284,12 +436,11 @@ const DoctorDashboard: NextPage = () => {
                   My Followings
                 </Typography>
                 <Typography variant="h4" fontWeight={700}>
-                  {stats.followings}
+                  {doctorData.memberFollowings || 0}
                 </Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5} mt={1}>
-                  <TrendingUpIcon sx={{ fontSize: 16, color: "#22c55e" }} />
-                  <Typography variant="caption" color="#22c55e">
-                    +{stats.followingsGrowth}%
+                  <Typography variant="caption" color="text.secondary">
+                    doctor profile stats
                   </Typography>
                 </Stack>
               </Box>
@@ -341,50 +492,74 @@ const DoctorDashboard: NextPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {recentAppointments.map((appointment) => (
-                    <TableRow key={appointment.id} hover>
-                      <TableCell>
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={1.5}
-                        >
-                          <Avatar src={appointment.patient.avatar} />
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
-                              {appointment.patient.name}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {appointment.patient.id}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {appointment.date}
+                  {recentAppointments.map((appointment: Appointment) => {
+                    const effectiveStatus = resolveAppointmentStatus(appointment);
+                    const patientId =
+                      appointment.patientData?._id || appointment.patient || "";
+                    return (
+                      <TableRow key={appointment._id} hover>
+                        <TableCell>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1.5}
+                            sx={{ cursor: patientId ? "pointer" : "default" }}
+                            onClick={() =>
+                              patientId
+                                ? router.push(`/_doctor/patients/detail?id=${patientId}`)
+                                : null
+                            }
+                          >
+                            <Avatar
+                              src={resolveMediaUrl(
+                                appointment.patientData?.memberImage,
+                              )}
+                            />
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {appointment.patientData?.memberNick || "Unknown Patient"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                #{appointment.patientData?._id?.slice(-6) || "N/A"}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {new Date(appointment.appointmentDate).toLocaleDateString()}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {appointment.timeSlot?.start || "-"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {toReadableStatus(appointment.consultationType)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={toReadableStatus(effectiveStatus)}
+                            color={getStatusColor(effectiveStatus)}
+                            size="small"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {recentAppointments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <Typography variant="body2" color="text.secondary">
+                          No appointments yet.
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {appointment.time}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {appointment.type}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={appointment.status}
-                          color={getStatusColor(appointment.status)}
-                          size="small"
-                        />
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -392,16 +567,36 @@ const DoctorDashboard: NextPage = () => {
         </Card>
 
         {/* Patient Reviews */}
-        <Card sx={{ flex: 1 }}>
+        <Card
+          sx={{ flex: 1, cursor: "pointer" }}
+          onClick={() => router.push(`/_doctor/detail?id=${doctorId}&tab=reviews`)}
+        >
           <CardContent>
             <Typography variant="h6" fontWeight={700} mb={2}>
               Patient Reviews
             </Typography>
 
             <Stack spacing={2}>
-              {patientReviews.map((review) => (
+              {getReviewsLoading && (
+                <Stack alignItems="center">
+                  <CircularProgress size={"1.5rem"} />
+                </Stack>
+              )}
+              {getReviewsError && (
+                <Typography variant="body2" color="text.secondary">
+                  Failed to load reviews.
+                </Typography>
+              )}
+              {!getReviewsLoading && !getReviewsError && patientReviews.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  No reviews yet.
+                </Typography>
+              )}
+              {!getReviewsLoading &&
+                !getReviewsError &&
+                patientReviews.map((review: Comment) => (
                 <Box
-                  key={review.id}
+                  key={review._id}
                   sx={{
                     p: 2,
                     backgroundColor: "#f8fafc",
@@ -410,30 +605,27 @@ const DoctorDashboard: NextPage = () => {
                 >
                   <Stack direction="row" spacing={1.5} mb={1}>
                     <Avatar
-                      src={review.patient.avatar}
+                      src={resolveMediaUrl(review.memberData?.memberImage)}
                       sx={{ width: 36, height: 36 }}
                     />
                     <Box flex={1}>
                       <Typography variant="body2" fontWeight={600}>
-                        {review.patient.name}
+                        {review.memberData?.memberNick || "Unknown User"}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {review.time}
+                        {new Date(review.createdAt).toLocaleDateString()}
                       </Typography>
                     </Box>
                   </Stack>
-                  <Rating
-                    value={review.rating}
-                    readOnly
-                    size="small"
-                    sx={{ mb: 1 }}
-                  />
                   <Typography
                     variant="caption"
                     color="text.secondary"
                     sx={{ fontStyle: "italic" }}
                   >
-                    {review.comment}
+                    {review.commentContent}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                    Likes: {review.commentLikes || 0}
                   </Typography>
                 </Box>
               ))}

@@ -118,6 +118,12 @@ export const sweetTopSmallSuccessAlert = async (
 		showConfirmButton: false,
 		timer: duration,
 		timerProgressBar: true,
+		didOpen: () => {
+			const container = Swal.getContainer();
+			if (container) {
+				container.style.marginTop = '78px';
+			}
+		},
 	});
 
 	Toast.fire({
