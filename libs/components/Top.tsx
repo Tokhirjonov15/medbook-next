@@ -5,6 +5,8 @@ import Menu from "@mui/material/Menu";
 import { Logout } from "@mui/icons-material";
 import { useState, MouseEvent } from "react";
 import { useRouter } from "next/router";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import { LANGUAGE_OPTIONS } from "@/libs/i18n/member";
 import type { LocaleKey } from "@/libs/i18n/member";
 import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
@@ -16,6 +18,8 @@ interface User {
 
 interface NavbarProps {
   user?: User | null;
+  themeMode?: "light" | "dark";
+  onToggleThemeMode?: () => void;
   onLogin?: () => void;
   onSignup?: () => void;
   onLogout?: () => void;
@@ -38,7 +42,7 @@ const toAbsoluteMediaUrl = (value?: string): string => {
   return src;
 };
 
-const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
+const Top = ({ user = null, themeMode = "light", onToggleThemeMode, onLogin, onSignup, onLogout }: NavbarProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -128,6 +132,13 @@ const Top = ({ user = null, onLogin, onSignup, onLogout }: NavbarProps) => {
             )}
           </Box>
           <Box component={"div"} className={"user-box"}>
+            <button className="theme-toggle-btn" onClick={onToggleThemeMode} aria-label="Toggle theme">
+              {themeMode === "dark" ? (
+                <LightModeOutlinedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />
+              ) : (
+                <DarkModeOutlinedIcon sx={{ fontSize: 18, color: "#475569" }} />
+              )}
+            </button>
             <button className="lang-btn" onClick={handleLangMenuOpen} aria-label="Change language">
               <img
                 className="lang-flag"

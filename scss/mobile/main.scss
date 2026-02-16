@@ -95,6 +95,19 @@
           align-items: center;
           gap: 6px;
 
+          .theme-toggle-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #dbe3ea;
+            border-radius: 7px;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+          }
+
           .lang-btn {
             display: inline-flex;
             align-items: center;
@@ -495,6 +508,51 @@
           }
         }
       }
+    }
+  }
+
+  #pc-wrap.member-mobile.theme-dark {
+    background: #0b1220;
+
+    #top {
+      .navbar {
+        background: #0f172a;
+        border-bottom-color: #243244;
+
+        .navbar-main {
+          .container {
+            background: #0f172a;
+          }
+        }
+
+        .router-box {
+          .router-link {
+            color: #cbd5e1;
+
+            &.active {
+              color: #60a5fa;
+            }
+          }
+        }
+
+        .user-box {
+          .theme-toggle-btn {
+            background: #1e293b;
+            border-color: #334155;
+          }
+
+          .lang-btn {
+            border-color: #334155;
+            background: #1e293b;
+            color: #e2e8f0;
+          }
+        }
+      }
+    }
+
+    #main {
+      background: #0b1220;
+      color: #e2e8f0;
     }
   }
 }
