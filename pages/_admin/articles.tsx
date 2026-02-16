@@ -1,7 +1,9 @@
 import React from "react";
+import Link from "next/link";
 import { NextPage } from "next";
 import {
   Box,
+  CircularProgress,
   FormControl,
   InputLabel,
   MenuItem,
@@ -9,28 +11,95 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useMutation, useQuery } from "@apollo/client";
 import { BoardArticleStatus } from "@/libs/enums/board-article.enum";
 import withLayoutAdmin from "@/libs/components/layout/LayoutAdmin";
+import { GET_ALL_BOARD_ARTICLES_BY_ADMIN } from "@/apollo/admin/query";
+import {
+  REMOVE_BOARD_ARTICLES_BY_ADMIN,
+  UPDATE_BOARD_ARTICLES_BY_ADMIN,
+} from "@/apollo/admin/mutation";
+import { BoardArticles } from "@/libs/types/board-article/board-article";
+import { AllBoardArticlesInquiry } from "@/libs/types/board-article/board-article.input";
+import { BoardArticleUpdate } from "@/libs/types/board-article/board-article.update";
+import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
 
-type ArticleRow = {
-  id: number;
-  title: string;
-  status: BoardArticleStatus;
+interface GetAllBoardArticlesByAdminResponse {
+  getAllBoardArticlesByAdmin: BoardArticles;
+}
+interface GetAllBoardArticlesByAdminVariables {
+  input: AllBoardArticlesInquiry;
+}
+interface UpdateBoardArticleByAdminResponse {
+  updateBoardArticleByAdmin: {
+    _id: string;
+    articleStatus: BoardArticleStatus;
+  };
+}
+interface UpdateBoardArticleByAdminVariables {
+  input: BoardArticleUpdate;
+}
+
+const formatDate = (value?: Date | string) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString();
 };
 
 const AdminArticlesPage: NextPage = () => {
-  const [articles, setArticles] = React.useState<ArticleRow[]>([
-    { id: 1, title: "How to Keep Heart Healthy", status: BoardArticleStatus.ACTIVE },
-    { id: 2, title: "Top 10 Skincare Habits", status: BoardArticleStatus.DELETE },
-    { id: 3, title: "5 Morning Routine Tips", status: BoardArticleStatus.ACTIVE },
-  ]);
+  const {
+    loading: getArticlesLoading,
+    data: getArticlesData,
+    error: getArticlesError,
+    refetch: getArticlesRefetch,
+  } = useQuery<GetAllBoardArticlesByAdminResponse, GetAllBoardArticlesByAdminVariables>(
+    GET_ALL_BOARD_ARTICLES_BY_ADMIN,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: {
+        input: {
+          page: 1,
+          limit: 200,
+          sort: "createdAt",
+          direction: "DESC",
+          search: {},
+        },
+      },
+      notifyOnNetworkStatusChange: true,
+    },
+  );
+  const [updateBoardArticleByAdmin, { loading: updateArticleLoading }] = useMutation<
+    UpdateBoardArticleByAdminResponse,
+    UpdateBoardArticleByAdminVariables
+  >(UPDATE_BOARD_ARTICLES_BY_ADMIN);
+  const [removeBoardArticleByAdmin, { loading: removeArticleLoading }] = useMutation(
+    REMOVE_BOARD_ARTICLES_BY_ADMIN,
+  );
 
-  const onChangeStatus = (articleId: number, next: BoardArticleStatus) => {
-    setArticles((prev) =>
-      prev.map((item) =>
-        item.id === articleId ? { ...item, status: next } : item,
-      ),
-    );
+  const articles = getArticlesData?.getAllBoardArticlesByAdmin?.list ?? [];
+  const mutationLoading = updateArticleLoading || removeArticleLoading;
+
+  const onChangeStatus = async (articleId: string, next: BoardArticleStatus) => {
+    try {
+      if (next === BoardArticleStatus.DELETE) {
+        await removeBoardArticleByAdmin({ variables: { input: articleId } });
+        await getArticlesRefetch();
+        await sweetTopSmallSuccessAlert("Article deleted", 800);
+        return;
+      }
+
+      await updateBoardArticleByAdmin({
+        variables: {
+          input: {
+            _id: articleId,
+            articleStatus: next,
+          },
+        },
+      });
+      await getArticlesRefetch();
+      await sweetTopSmallSuccessAlert("Status updated", 800);
+    } catch (err: any) {
+      sweetErrorHandling(err).then();
+    }
   };
 
   return (
@@ -42,32 +111,63 @@ const AdminArticlesPage: NextPage = () => {
         Manage article publication status.
       </Typography>
 
-      <Stack className="admin-list" spacing={1.5}>
-        {articles.map((article) => (
-          <Box className="admin-list__row" key={article.id}>
-            <Box className="admin-list__col admin-list__col--main">
-              <Typography className="admin-list__name">{article.title}</Typography>
-            </Box>
+      {getArticlesLoading && (
+        <Stack
+          sx={{
+            width: "100%",
+            minHeight: "280px",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <CircularProgress size={"2.6rem"} />
+        </Stack>
+      )}
 
-            <FormControl size="small" className="admin-list__status">
-              <InputLabel>Status</InputLabel>
-              <Select
-                label="Status"
-                value={article.status}
-                onChange={(event) =>
-                  onChangeStatus(
-                    article.id,
-                    event.target.value as BoardArticleStatus,
-                  )
-                }
-              >
-                <MenuItem value={BoardArticleStatus.ACTIVE}>ACTIVE</MenuItem>
-                <MenuItem value={BoardArticleStatus.DELETE}>DELETE</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        ))}
-      </Stack>
+      {!getArticlesLoading && getArticlesError && (
+        <Typography>Failed to load articles.</Typography>
+      )}
+
+      {mutationLoading && !getArticlesLoading && (
+        <Stack sx={{ width: "100%", alignItems: "center", justifyContent: "center", py: 2 }}>
+          <CircularProgress size={"1.8rem"} />
+        </Stack>
+      )}
+
+      {!getArticlesLoading && !getArticlesError && (
+        <Stack className="admin-list" spacing={1.5}>
+          {articles.map((article) => (
+            <Box className="admin-list__row" key={article._id}>
+              <Box className="admin-list__col admin-list__col--main">
+                <Link
+                  href={`/_admin/articles/detail?id=${article._id}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <Typography className="admin-list__name">{article.articleTitle}</Typography>
+                </Link>
+                <Typography className="admin-list__meta">
+                  By: {article.memberData?.memberNick || article.memberId} |{" "}
+                  {formatDate(article.createdAt)}
+                </Typography>
+              </Box>
+
+              <FormControl size="small" className="admin-list__status">
+                <InputLabel>Status</InputLabel>
+                <Select
+                  label="Status"
+                  value={article.articleStatus}
+                  onChange={(event) =>
+                    onChangeStatus(article._id, event.target.value as BoardArticleStatus)
+                  }
+                >
+                  <MenuItem value={BoardArticleStatus.ACTIVE}>ACTIVE</MenuItem>
+                  <MenuItem value={BoardArticleStatus.DELETE}>DELETE</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          ))}
+        </Stack>
+      )}
     </Box>
   );
 };

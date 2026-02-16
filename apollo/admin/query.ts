@@ -228,7 +228,18 @@ export const GET_ALL_BOARD_ARTICLES_BY_ADMIN = gql`
         articleViews
         articleLikes
         articleComments
+        meLiked {
+          memberId
+          likeRefId
+          myFavorite
+        }
         memberId
+        memberData {
+          _id
+          memberNick
+          memberImage
+          memberType
+        }
         createdAt
         updatedAt
       }

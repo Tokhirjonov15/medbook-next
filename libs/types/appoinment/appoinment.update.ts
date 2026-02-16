@@ -1,3 +1,5 @@
+import { AppointmentStatus } from "../../enums/appoinment.enum";
+
 export interface TimeSlotInput {
   start: string;
   end: string;
@@ -9,5 +11,6 @@ export interface AppointmentUpdate {
   timeSlot?: TimeSlotInput;
   symptoms?: string[];
   notes?: string;
+  status?: AppointmentStatus;
 }
 
