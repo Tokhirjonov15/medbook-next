@@ -215,9 +215,18 @@ const BrowseBySpecialization = () => {
   const doctors: Doctor[] = getSpecsData?.getDoctors?.list ?? [];
   const doctorCountBySpecialization = doctors.reduce<Record<string, number>>(
     (acc, doctor) => {
-      const key = doctor?.specialization;
-      if (!key) return acc;
-      acc[key] = (acc[key] ?? 0) + 1;
+      const specList = Array.isArray(doctor?.specialization)
+        ? doctor.specialization
+        : doctor?.specialization
+          ? [doctor.specialization]
+          : [];
+
+      specList.forEach((spec) => {
+        const key = String(spec);
+        if (!key) return;
+        acc[key] = (acc[key] ?? 0) + 1;
+      });
+
       return acc;
     },
     {},

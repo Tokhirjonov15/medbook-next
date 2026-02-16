@@ -36,6 +36,7 @@ export const UPDATE_DOCTORS_BY_ADMIN = gql`
     updateDoctorByAdmin(input: $input) {
       _id
       memberNick
+      memberStatus
       memberFullName
       memberPhone
       memberDesc

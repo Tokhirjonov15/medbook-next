@@ -15,6 +15,21 @@ interface TopDoctorsProps {
   initialInput?: DoctorsInquiry;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
 const TopRatedDoctors = ({
   initialInput = DEFAULT_DOCTORS_INPUT,
 }: TopDoctorsProps) => {
@@ -119,7 +134,7 @@ const TopRatedDoctors = ({
                     sx={{ backgroundColor: "#2d3748" }}
                   >
                     <img
-                      src={doctor.memberImage || "/img/defaultUser.svg"}
+                      src={toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg"}
                       alt={doctor.memberFullName || doctor.memberNick}
                     />
                   </Box>

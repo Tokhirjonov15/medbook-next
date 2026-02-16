@@ -15,6 +15,9 @@ export const GET_ALL_MEMBERS_BY_ADMIN = gql`
         memberPhone
         memberImage
         memberGender
+        memberFollowers
+        memberFollowings
+        memberLikes
         isActive
         lastLogin
         bloodGroup
@@ -39,8 +42,12 @@ export const GET_ALL_DOCTORS_BY_ADMIN = gql`
       list {
         _id
         memberNick
+        memberStatus
         memberFullName
         memberPhone
+        memberFollowers
+        memberFollowings
+        memberLikes
         licenseNumber
         specialization
         experience
@@ -50,7 +57,7 @@ export const GET_ALL_DOCTORS_BY_ADMIN = gql`
         languages
         memberImage
         accessToken
-        DoctorViews
+        doctorViews
         reviewCount
         createdAt
         updatedAt

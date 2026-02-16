@@ -1,9 +1,11 @@
 import { Gender } from "@/libs/enums/gender.enum";
+import { MemberStatus } from "@/libs/enums/member.enum";
 import { Specialization } from "../../enums/specialization.enum";
 
 export interface DoctorUpdate {
   _id?: string;
   memberNick?: string;
+  memberStatus?: MemberStatus;
   memberPassword?: string;
   memberFullName?: string;
   memberPhone?: string;
