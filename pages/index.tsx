@@ -6,6 +6,12 @@ import withLayoutMain from "@/libs/components/layout/LayoutMember";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
 import { Stack } from "@mui/material";
 import { NextPage } from "next";
+import dynamic from "next/dynamic";
+
+const PortalShowcase = dynamic(
+  () => import("@/libs/components/homepage/PortalShowcase"),
+  { ssr: false },
+);
 
 const Home: NextPage = () => {
   const device = useDeviceDetect();
@@ -14,6 +20,7 @@ const Home: NextPage = () => {
     return (
       <Stack className={"home-page mobile"}>
         <Entrance />
+        <PortalShowcase />
         <BrowseBySpecialization />
         <TopRatedDoctors />
         <Events />
@@ -23,6 +30,7 @@ const Home: NextPage = () => {
     return (
       <Stack className={"home-page"}>
         <Entrance />
+        <PortalShowcase />
         <BrowseBySpecialization />
         <TopRatedDoctors />
         <Events />
