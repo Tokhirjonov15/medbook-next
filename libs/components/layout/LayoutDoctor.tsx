@@ -23,6 +23,20 @@ import { MemberType } from "@/libs/enums/member.enum";
 import { getJwtToken, logOut, updateUserInfo } from "@/libs/auth";
 
 const drawerWidth = 240;
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
 
 const withLayoutDoctor = (Component: ComponentType) => {
   return (props: object) => {
@@ -53,7 +67,7 @@ const withLayoutDoctor = (Component: ComponentType) => {
 
     const doctorDisplayName = doctor?.memberFullName || doctor?.memberNick || "Doctor";
     const doctorPhone = doctor?.memberPhone || "-";
-    const doctorImage = doctor?.memberImage || "/img/defaultUser.svg";
+    const doctorImage = toAbsoluteMediaUrl(doctor?.memberImage) || "/img/defaultUser.svg";
 
     /** HANDLERS **/
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {

@@ -44,6 +44,11 @@ const TopRatedDoctors = ({
     router.push(`/doctor/detail?id=${doctorId}`);
   };
 
+  const getSpecializationLabel = (value: Doctor["specialization"]) => {
+    const list = Array.isArray(value) ? value : value ? [value] : [];
+    return list.map((item) => String(item).replaceAll("_", " ")).join(", ");
+  };
+
   const getAvailabilityText = (doctor: Doctor) => {
     if (doctor?.workingDays?.length) {
       return `${t("home.nextAvailableMon")}: ${doctor.workingDays[0]}`;
@@ -123,7 +128,7 @@ const TopRatedDoctors = ({
                       {doctor.memberFullName || doctor.memberNick}
                     </h3>
                     <p className="doctor-card-specialization">
-                      {doctor.specialization?.replaceAll("_", " ")} -{" "}
+                      {getSpecializationLabel(doctor.specialization)} -{" "}
                       {doctor.experience} {t("home.yearsExp")}
                     </p>
                     <Box className="doctor-card-footer">

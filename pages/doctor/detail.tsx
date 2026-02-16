@@ -606,7 +606,14 @@ export const DoctorDetailPage: NextPage = () => {
 
   const imagePath = toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg";
   const doctorName = doctor.memberFullName || doctor.memberNick;
-  const specialization = (doctor.specialization || "").replaceAll("_", " ");
+  const specialization = (Array.isArray(doctor.specialization)
+    ? doctor.specialization
+    : doctor.specialization
+      ? [doctor.specialization]
+      : []
+  )
+    .map((value) => String(value).replaceAll("_", " "))
+    .join(", ");
   const languages = doctor.languages ?? [];
   const workingDays = doctor.workingDays ?? [];
   const workingHours = doctor.workingHours?.join(", ") || "Not set";

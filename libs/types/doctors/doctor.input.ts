@@ -6,7 +6,7 @@ export interface DoctorSignupInput {
   memberPassword: string;
   memberPhone: string;
   licenseNumber: string;
-  specialization: string;
+  specialization: string | string[];
   experience: number;
   consultationFee: number;
   memberGender?: Gender;

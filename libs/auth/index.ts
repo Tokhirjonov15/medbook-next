@@ -139,7 +139,7 @@ export const signUpDoctor = async (input: {
   memberFullName: string;
   memberGender?: Gender;
   licenseNumber: string;
-  specialization: Specialization;
+  specialization: Specialization | Specialization[];
   experience: number;
   consultationFee: number;
   languages?: string[];
@@ -267,7 +267,7 @@ const requestDoctorSignUpToken = async (input: {
   memberFullName: string;
   memberGender?: Gender;
   licenseNumber: string;
-  specialization: Specialization;
+  specialization: Specialization | Specialization[];
   experience: number;
   consultationFee: number;
   languages?: string[];

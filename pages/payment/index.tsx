@@ -416,7 +416,14 @@ const PaymentPage: NextPage = () => {
   }
 
   const doctorName = doctor.memberFullName || doctor.memberNick;
-  const doctorSpec = (doctor.specialization || "").replaceAll("_", " ");
+  const doctorSpec = (Array.isArray(doctor.specialization)
+    ? doctor.specialization
+    : doctor.specialization
+      ? [doctor.specialization]
+      : []
+  )
+    .map((value) => String(value).replaceAll("_", " "))
+    .join(", ");
   const doctorImage = doctor.memberImage || "/img/defaultUser.svg";
 
   return (

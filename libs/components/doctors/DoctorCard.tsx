@@ -26,7 +26,14 @@ const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
   const user = useReactiveVar(userVar);
   const imagePath: string = doctor.memberImage || "/img/defaultUser.svg";
   const doctorName = doctor.memberFullName || doctor.memberNick;
-  const specialization = (doctor.specialization || "").replaceAll("_", " ");
+  const specializationRaw = Array.isArray(doctor.specialization)
+    ? doctor.specialization
+    : doctor.specialization
+      ? [doctor.specialization]
+      : [];
+  const specialization = specializationRaw
+    .map((item) => String(item).replaceAll("_", " "))
+    .join(", ");
   const location = doctor.clinicAddress || "Clinic address not set";
   const availability = doctor.workingDays?.length
     ? `Available on ${doctor.workingDays[0]}`

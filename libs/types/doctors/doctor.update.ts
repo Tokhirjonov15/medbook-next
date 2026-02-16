@@ -11,7 +11,7 @@ export interface DoctorUpdate {
   memberDesc?: string;
   memberGender?: Gender;
   licenseNumber?: string;
-  specialization?: Specialization;
+  specialization?: Specialization | Specialization[];
   experience?: number;
   consultationFee?: number;
   languages?: string[];

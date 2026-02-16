@@ -42,7 +42,7 @@ export interface CustomJwtPayloadDoctor extends JwtPayload {
   memberWarnings: number;
   memberBlocks: number;
   licenseNumber: string;
-  specialization: string;
+  specialization: string | string[];
   experience: number;
   languages: string[];
   clinicName: string;

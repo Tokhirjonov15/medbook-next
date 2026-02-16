@@ -19,7 +19,7 @@ export interface Doctor {
   memberBlocks: number;
   memberLikes: number;
   licenseNumber: string;
-  specialization: string;
+  specialization: string | string[];
   experience: number;
   consultationFee: number;
   memberType: MemberType;

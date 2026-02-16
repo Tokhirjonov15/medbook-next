@@ -152,6 +152,12 @@ const toAppointmentMode = (type?: ConsultationType): AppointmentMode => {
   return "In-Person";
 };
 
+const formatSpecialization = (value?: string | string[]) => {
+  const list = Array.isArray(value) ? value : value ? [value] : [];
+  if (!list.length) return "General";
+  return list.map((item) => String(item).replaceAll("_", " ")).join(", ");
+};
+
 const isFollowedByMe = (value: any): boolean => {
   if (!value) return false;
   if (Array.isArray(value)) return value.some((item) => Boolean(item?.myFollowing));
@@ -378,7 +384,7 @@ const MyPage: NextPage = () => {
           appointment.doctorData?.memberNick?.trim() ||
           visitedDoctorNameMap[appointment.doctor] ||
           "Unknown Doctor",
-        specialization: appointment.doctorData?.specialization || "General",
+        specialization: formatSpecialization(appointment.doctorData?.specialization),
         status: appointment.status,
         mode: toAppointmentMode(appointment.consultationType),
         startsAt: appointment.appointmentDate,
@@ -392,7 +398,7 @@ const MyPage: NextPage = () => {
       (getVisitedDoctorsData?.getVisitedDoctors?.list ?? []).map((doctor) => ({
         id: doctor._id,
         name: doctor.memberFullName || doctor.memberNick,
-        specialization: doctor.specialization || "General",
+        specialization: formatSpecialization(doctor.specialization),
         image: toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg",
       })),
     [getVisitedDoctorsData],
