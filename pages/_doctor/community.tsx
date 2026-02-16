@@ -1,218 +1,208 @@
-import React, { useState } from "react";
-import { Box, Button, Pagination, Stack, Typography } from "@mui/material";
+import React, { useMemo, useState } from "react";
+import {
+  Button,
+  CircularProgress,
+  Pagination,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
+import { useMutation, useQuery, useReactiveVar } from "@apollo/client";
 import CreateIcon from "@mui/icons-material/Create";
 import CommunityFilter from "@/libs/components/community/Filter";
 import CommunityCard from "@/libs/components/community/Communitycard";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
+import { GET_BOARD_ARTICLES } from "@/apollo/user/query";
+import { LIKE_TARGET_BOARD_ARTICLE } from "@/apollo/user/mutation";
+import { BoardArticlesInquiry } from "@/libs/types/board-article/board-article.input";
+import { BoardArticle, BoardArticles } from "@/libs/types/board-article/board-article";
+import { BoardArticleCategory } from "@/libs/enums/board-article.enum";
+import { userVar } from "@/apollo/store";
+import {
+  sweetErrorHandling,
+  sweetMixinErrorAlert,
+  sweetTopSmallSuccessAlert,
+} from "@/libs/sweetAlert";
+import { Messages } from "@/libs/config";
 
-const DoctorCommunityList: NextPage = () => {
+interface DoctorCommunityListProps {
+  initialInput: BoardArticlesInquiry;
+}
+
+interface GetBoardArticlesResponse {
+  getBoardArticles: BoardArticles;
+}
+
+interface GetBoardArticlesVariables {
+  input: BoardArticlesInquiry;
+}
+
+type CategoryUi = "All" | "Free" | "Recommend" | "News" | "Question";
+
+const CATEGORY_TO_ENUM: Partial<Record<CategoryUi, BoardArticleCategory>> = {
+  Free: BoardArticleCategory.FREE,
+  Recommend: BoardArticleCategory.RECOMMEND,
+  News: BoardArticleCategory.NEWS,
+  Question: BoardArticleCategory.QUESTION,
+};
+
+const getCategoryLabel = (value: BoardArticleCategory): string => {
+  if (value === BoardArticleCategory.FREE) return "Free";
+  if (value === BoardArticleCategory.RECOMMEND) return "Recommend";
+  if (value === BoardArticleCategory.NEWS) return "News";
+  if (value === BoardArticleCategory.QUESTION) return "Question";
+  return "Free";
+};
+
+const getCategoryFallbackImage = (category: BoardArticleCategory): string => {
+  if (category === BoardArticleCategory.NEWS) return "/img/nws.png";
+  if (category === BoardArticleCategory.FREE) return "/img/free.jpg";
+  if (category === BoardArticleCategory.RECOMMEND) return "/img/recommend.png";
+  return "/img/question.jpg";
+};
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
+};
+
+const toPlainText = (value: string): string =>
+  String(value || "")
+    .replace(/!\[[^\]]*\]\(([^)]+)\)/g, " ")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const DoctorCommunityList: NextPage<DoctorCommunityListProps> = (
+  props: DoctorCommunityListProps,
+) => {
+  const { initialInput } = props;
   const router = useRouter();
+  const user = useReactiveVar(userVar);
 
-  const [articles, setArticles] = useState<any[]>([
-    {
-      id: 1,
-      title: "Top 10 Heart Health Tips for 2024",
-      category: "Free",
-      author: {
-        name: "Dr. Sarah Jenkins",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Maintaining heart health is crucial for overall well-being. Here are some essential tips...",
-      image: "/img/article.png",
-      views: 1234,
-      likes: 89,
-      comments: 12,
-      createdAt: "2024-02-08",
-    },
-    {
-      id: 2,
-      title: "Understanding COVID-19 Vaccines",
-      category: "Recommend",
-      author: {
-        name: "Dr. Michael Chen",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Everything you need to know about COVID-19 vaccines and their importance...",
-      image: "/img/article.png",
-      views: 2456,
-      likes: 234,
-      comments: 45,
-      createdAt: "2024-02-07",
-    },
-    {
-      id: 3,
-      title: "New Study: Exercise and Mental Health",
-      category: "News",
-      author: {
-        name: "Dr. Emily Roberts",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Recent research shows strong connection between physical activity and mental wellness...",
-      image: "/img/news.png",
-      views: 3421,
-      likes: 456,
-      comments: 67,
-      createdAt: "2024-02-06",
-    },
-    {
-      id: 4,
-      title: "How to manage diabetes effectively?",
-      category: "Question",
-      author: {
-        name: "John Doe",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "I was recently diagnosed with type 2 diabetes. What are the best practices for managing it?",
-      image: "/img/news.png",
-      views: 567,
-      likes: 23,
-      comments: 8,
-      createdAt: "2024-02-05",
-    },
-    {
-      id: 5,
-      title: "Benefits of Mediterranean Diet",
-      category: "Free",
-      author: {
-        name: "Dr. Sarah Jenkins",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Discover why the Mediterranean diet is considered one of the healthiest...",
-      image: "/img/article.png",
-      views: 890,
-      likes: 67,
-      comments: 15,
-      createdAt: "2024-02-04",
-    },
-    {
-      id: 6,
-      title: "Sleep Hygiene: Expert Recommendations",
-      category: "Recommend",
-      author: {
-        name: "Dr. James Wilson",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Quality sleep is essential for health. Here are expert-backed recommendations...",
-      image: "/img/article.png",
-      views: 1567,
-      likes: 123,
-      comments: 28,
-      createdAt: "2024-02-03",
-    },
-    {
-      id: 7,
-      title: "Breaking: FDA Approves New Cancer Treatment",
-      category: "News",
-      author: {
-        name: "Dr. Michael Chen",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "The FDA has approved a groundbreaking new treatment for lung cancer...",
-      image: "/img/news.png",
-      views: 4321,
-      likes: 567,
-      comments: 89,
-      createdAt: "2024-02-02",
-    },
-    {
-      id: 8,
-      title: "What causes frequent headaches?",
-      category: "Question",
-      author: {
-        name: "Jane Smith",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "I've been experiencing frequent headaches lately. Should I be concerned?",
-      image: "/img/news.png",
-      views: 432,
-      likes: 12,
-      comments: 5,
-      createdAt: "2024-02-01",
-    },
-    {
-      id: 9,
-      title: "Mental Health in the Modern Workplace",
-      category: "Free",
-      author: {
-        name: "Dr. Emily Roberts",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Addressing mental health challenges in today's work environment...",
-      image: "/img/article.png",
-      views: 2134,
-      likes: 178,
-      comments: 34,
-      createdAt: "2024-01-31",
-    },
-    {
-      id: 10,
-      title: "Vitamin D: Are You Getting Enough?",
-      category: "Recommend",
-      author: {
-        name: "Dr. Sarah Jenkins",
-        image: "/img/defaultUser.svg",
-      },
-      content:
-        "Learn about the importance of vitamin D and how to ensure adequate levels...",
-      image: "/img/article.png",
-      views: 1876,
-      likes: 145,
-      comments: 23,
-      createdAt: "2024-01-30",
-    },
-  ]);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryUi>("All");
+  const [currentPage, setCurrentPage] = useState<number>(initialInput.page);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 6;
+  const queryInput = useMemo<BoardArticlesInquiry>(() => {
+    const articleCategory = CATEGORY_TO_ENUM[selectedCategory];
+    return {
+      ...initialInput,
+      page: currentPage,
+      search: articleCategory ? { articleCategory } : {},
+    };
+  }, [currentPage, initialInput, selectedCategory]);
 
-  const filteredArticles = articles.filter((article) => {
-    if (selectedCategory === "All") return true;
-    return article.category === selectedCategory;
-  });
-
-  const sortedArticles = [...filteredArticles].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  const {
+    loading: getBoardArticlesLoading,
+    data: getBoardArticlesData,
+    error: getBoardArticlesError,
+    refetch: getBoardArticlesRefetch,
+  } = useQuery<GetBoardArticlesResponse, GetBoardArticlesVariables>(
+    GET_BOARD_ARTICLES,
+    {
+      fetchPolicy: "cache-and-network",
+      variables: { input: queryInput },
+      notifyOnNetworkStatusChange: true,
+    },
+  );
+  const [likeTargetBoardArticle, { loading: likeArticleLoading }] = useMutation(
+    LIKE_TARGET_BOARD_ARTICLE,
   );
 
-  const totalPages = Math.ceil(sortedArticles.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentArticles = sortedArticles.slice(startIndex, endIndex);
+  const rawArticles = getBoardArticlesData?.getBoardArticles?.list ?? [];
+  const totalArticles =
+    getBoardArticlesData?.getBoardArticles?.metaCounter?.[0]?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalArticles / queryInput.limit));
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number,
-  ) => {
+  const articles = useMemo(
+    () =>
+      rawArticles.map((article: BoardArticle) => ({
+        id: article._id,
+        title: article.articleTitle,
+        category: getCategoryLabel(article.articleCategory),
+        author: {
+          name: article.memberData?.memberNick || "Unknown",
+          image:
+            toAbsoluteMediaUrl(article.memberData?.memberImage) ||
+            "/img/defaultUser.svg",
+        },
+        content: toPlainText(article.articleContent),
+        image:
+          toAbsoluteMediaUrl(article.articleImage) ||
+          getCategoryFallbackImage(article.articleCategory),
+        views: article.articleViews || 0,
+        likes: article.articleLikes || 0,
+        comments: article.articleComments || 0,
+        createdAt: article.createdAt,
+        liked: Boolean(article.meLiked?.length),
+      })),
+    [rawArticles],
+  );
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCategoryFilter = (category: string) => {
-    setSelectedCategory(category);
+    setSelectedCategory(category as CategoryUi);
     setCurrentPage(1);
   };
 
-  const handleCreateArticle = () => {
-    router.push("/community/create");
+  const handleCreateArticle = async () => {
+    if (!user?._id) {
+      await sweetMixinErrorAlert("Please login first");
+      return;
+    }
+    await router.push("/_doctor/community/create");
+  };
+
+  const likeArticleHandler = async (articleId: string) => {
+    try {
+      if (!articleId) return;
+      if (likeArticleLoading) return;
+      if (!user?._id) throw new Error(Messages.error2);
+
+      await likeTargetBoardArticle({
+        variables: {
+          input: articleId,
+        },
+      });
+      await sweetTopSmallSuccessAlert("Success!", 800);
+      await getBoardArticlesRefetch({ input: queryInput });
+    } catch (err: any) {
+      if (!user?._id) {
+        await sweetMixinErrorAlert("Please login first");
+        return;
+      }
+      sweetErrorHandling(err).then();
+    }
   };
 
   return (
-    <div id="community-list-page" style={{ position: "relative" }}>
+    <div
+      id="community-list-page"
+      style={{
+        position: "relative",
+        minHeight: "calc(100vh - 72px)",
+        background: "#f6f6f6",
+      }}
+    >
       <Stack className="container">
         <Stack className="result-count">
-          <Typography>{sortedArticles.length} articles found</Typography>
+          <Typography>{totalArticles} articles found</Typography>
           <Typography className="subtitle">
             Share your knowledge and connect with the community
           </Typography>
@@ -237,10 +227,50 @@ const DoctorCommunityList: NextPage = () => {
               </Button>
             </Stack>
 
-            <Stack className="list-config">
-              {currentArticles.map((article, index) => {
-                return <CommunityCard key={index} article={article} />;
-              })}
+            <Stack className="list-config" sx={{ position: "relative" }}>
+              {likeArticleLoading && (
+                <Stack
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 8,
+                    background: "rgba(255, 255, 255, 0.55)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <CircularProgress size={"3rem"} />
+                </Stack>
+              )}
+              {getBoardArticlesLoading && (
+                <Stack
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                    minHeight: "420px",
+                  }}
+                >
+                  <CircularProgress size={"3rem"} />
+                </Stack>
+              )}
+              {getBoardArticlesError && (
+                <Typography>Failed to load community articles.</Typography>
+              )}
+              {!getBoardArticlesLoading &&
+                !getBoardArticlesError &&
+                articles.length === 0 && <Typography>No articles found.</Typography>}
+              {!getBoardArticlesLoading &&
+                !getBoardArticlesError &&
+                articles.map((article) => (
+                  <CommunityCard
+                    key={article.id}
+                    article={article}
+                    onLike={likeArticleHandler}
+                  />
+                ))}
             </Stack>
 
             <Stack className="pagination-config">
@@ -254,9 +284,7 @@ const DoctorCommunityList: NextPage = () => {
                 />
               </Stack>
               <Stack className="total-result">
-                <Typography>
-                  Total {sortedArticles.length} articles available
-                </Typography>
+                <Typography>Total {totalArticles} articles available</Typography>
               </Stack>
             </Stack>
           </Stack>
@@ -264,6 +292,16 @@ const DoctorCommunityList: NextPage = () => {
       </Stack>
     </div>
   );
+};
+
+DoctorCommunityList.defaultProps = {
+  initialInput: {
+    page: 1,
+    limit: 6,
+    sort: "createdAt",
+    direction: "DESC" as unknown as BoardArticlesInquiry["direction"],
+    search: {},
+  },
 };
 
 export default withLayoutDoctor(DoctorCommunityList);

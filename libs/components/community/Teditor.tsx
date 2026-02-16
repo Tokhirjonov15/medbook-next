@@ -175,7 +175,8 @@ const TEditor = () => {
       });
 
       await sweetTopSmallSuccessAlert("Article created successfully", 900);
-      await router.push("/community");
+      const isDoctorRoute = router.pathname.startsWith("/_doctor/");
+      await router.push(isDoctorRoute ? "/_doctor/community" : "/community");
     } catch (err: any) {
       if (String(err?.message || "").includes("login")) {
         await sweetMixinErrorAlert("Please login first");
