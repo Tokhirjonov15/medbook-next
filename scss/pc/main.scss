@@ -473,4 +473,419 @@
     background: #0b1220;
     color: #e2e8f0;
   }
+
+  /* Patient pages: common dark palette */
+  #home-page,
+  #doctor-list-page,
+  #doctor-detail-page,
+  #community-list-page,
+  #community-detail-page,
+  #community-create-page,
+  #mypage-page,
+  #payment-page,
+  #cs-page,
+  #customer-service-page {
+    background: #0b1220;
+    color: #e2e8f0;
+  }
+
+  /* Generic cards/panels */
+  .hero-card,
+  .specialization-card,
+  .doctor-card,
+  .event-card,
+  .filter-main,
+  .doctor-card-config,
+  .community-card-config,
+  .detail-content,
+  .book-section,
+  .mypage-tabs,
+  .mypage-panel,
+  .mypage-list-item,
+  .mypage-appointment-card,
+  .payment-modal,
+  .summary-card,
+  .cs-content {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    box-shadow: none;
+  }
+
+  /* Section backgrounds still light in some pages */
+  .home-page .hero,
+  .home-page .browse-specialization,
+  .home-page .events,
+  .home-page .top-rated-doctors {
+    background: #0f172a !important;
+  }
+
+  /* Readability */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  .title,
+  .section-title,
+  .doctor-name,
+  .doctor-card-name,
+  .article-title,
+  .mypage-title,
+  .mypage-section-title {
+    color: #e2e8f0 !important;
+  }
+
+  p,
+  span,
+  .sub-title,
+  .subtitle,
+  .description,
+  .card-description,
+  .doctor-spec,
+  .doctor-card-specialization,
+  .article-date,
+  .author-name,
+  .comment-date,
+  .mypage-subtitle {
+    color: #94a3b8 !important;
+  }
+
+  /* Inputs & selects */
+  .MuiOutlinedInput-root {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    fieldset {
+      border-color: #334155 !important;
+    }
+    &:hover fieldset {
+      border-color: #475569 !important;
+    }
+    &.Mui-focused fieldset {
+      border-color: #60a5fa !important;
+    }
+  }
+
+  .MuiInputBase-input,
+  .MuiSelect-select,
+  .MuiInputLabel-root,
+  .MuiFormLabel-root {
+    color: #cbd5e1 !important;
+  }
+
+  .MuiPaper-root.MuiMenu-paper {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #334155;
+  }
+
+  .MuiMenuItem-root {
+    color: #e2e8f0 !important;
+  }
+
+  .MuiTabs-root,
+  .MuiTab-root {
+    color: #cbd5e1 !important;
+  }
+
+  .MuiPagination-root .MuiPaginationItem-root {
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
+  }
+
+  /* Doctors list page: explicit dark overrides */
+  #doctor-list-page {
+    background: #0b1220 !important;
+
+    .container {
+      .top-controls {
+        background: #0b1220 !important;
+
+        .search-box {
+          .search-input {
+            background: #111827 !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+          }
+        }
+
+        .sort-box {
+          span {
+            color: #cbd5e1 !important;
+          }
+          button {
+            background: #111827 !important;
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+
+            &:hover {
+              background: #1f2937 !important;
+            }
+          }
+        }
+      }
+
+      .doctor-page {
+        .filter-config {
+          .filter-main {
+            background: #111827 !important;
+            border: 1px solid #334155 !important;
+
+            .find-your-doctor {
+              .title-main,
+              .title {
+                color: #e2e8f0 !important;
+              }
+
+              .input-box {
+                .location-input {
+                  background: #0f172a !important;
+                  border-color: #334155 !important;
+                  color: #e2e8f0 !important;
+                }
+              }
+
+              .specialization-select {
+                background: #0f172a !important;
+                color: #e2e8f0 !important;
+
+                .MuiOutlinedInput-notchedOutline {
+                  border-color: #334155 !important;
+                }
+              }
+
+              .fee-display {
+                background: #1f2937 !important;
+                .fee-text {
+                  color: #e2e8f0 !important;
+                }
+              }
+
+              .fee-inputs {
+                input {
+                  background: #0f172a !important;
+                  border-color: #334155 !important;
+                  color: #e2e8f0 !important;
+                }
+              }
+            }
+          }
+        }
+
+        .main-config {
+          .list-config {
+            .doctor-card-config {
+              background: #111827 !important;
+              border: 1px solid #334155 !important;
+
+              .doctor-card-right {
+                .action-buttons {
+                  .view-profile-btn {
+                    background: #1f2937 !important;
+                    border-color: #475569 !important;
+                    color: #e2e8f0 !important;
+
+                    &:hover {
+                      background: #334155 !important;
+                      border-color: #60a5fa !important;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Community list page */
+  #community-list-page {
+    background: #0b1220 !important;
+
+    .container {
+      .community-page {
+        .filter-config {
+          .filter-main {
+            background: #111827 !important;
+            border: 1px solid #334155 !important;
+
+            .find-articles {
+              .title-main,
+              .title {
+                color: #e2e8f0 !important;
+              }
+
+              .category-list {
+                .category-btn {
+                  background: #0f172a !important;
+                  border-color: #334155 !important;
+                  color: #cbd5e1 !important;
+
+                  &:hover {
+                    background: #1f2937 !important;
+                  }
+
+                  &.active {
+                    background: #1e293b !important;
+                    border-color: #60a5fa !important;
+                    color: #93c5fd !important;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        .main-config {
+          .list-config {
+            .community-card-config {
+              background: #111827 !important;
+              border: 1px solid #334155 !important;
+
+              .card-main {
+                .card-content {
+                  .card-footer {
+                    border-top-color: #334155 !important;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Community detail page */
+  #community-detail-page {
+    background: #0b1220 !important;
+
+    .detail-container {
+      .detail-content {
+        background: #111827 !important;
+        border: 1px solid #334155 !important;
+
+        .article-header {
+          border-bottom-color: #334155 !important;
+        }
+
+        .article-content {
+          background: #111827 !important;
+
+          .toastui-editor-contents,
+          .toastui-editor-contents *,
+          .toastui-editor-contents .toastui-editor-contents,
+          .toastui-editor-contents .toastui-editor-contents * {
+            background: transparent !important;
+          }
+
+          .toastui-editor-contents,
+          .toastui-editor-contents p,
+          .toastui-editor-contents li,
+          .toastui-editor-contents h1,
+          .toastui-editor-contents h2,
+          .toastui-editor-contents h3,
+          .toastui-editor-contents h4 {
+            color: #e2e8f0 !important;
+          }
+
+          .toastui-editor-contents p,
+          .toastui-editor-contents span {
+            color: #e2e8f0 !important;
+          }
+
+          .toastui-editor-contents pre,
+          .toastui-editor-contents code,
+          .toastui-editor-contents blockquote {
+            background: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+          }
+        }
+
+        .comments-section {
+          background: #111827 !important;
+          border-top-color: #334155 !important;
+
+          .comment-item {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+          }
+
+          .reply-box {
+            .reply-input {
+              .MuiOutlinedInput-root {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+              }
+            }
+          }
+
+          .replies-list {
+            .reply-item {
+              background: #0f172a !important;
+              border-color: #334155 !important;
+            }
+          }
+
+          .write-comment {
+            .comment-input {
+              .MuiOutlinedInput-root {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Customer service page */
+  #customer-service-page {
+    background: #0b1220 !important;
+
+    .cs-content {
+      background: #111827 !important;
+      border: 1px solid #334155 !important;
+      box-shadow: none !important;
+    }
+
+    .tabs-section {
+      background: #0f172a !important;
+      border-bottom-color: #334155 !important;
+    }
+
+    .faq-content {
+      .section-intro {
+        background: #0f172a !important;
+        border-left-color: #60a5fa !important;
+      }
+    }
+
+    .faq-accordion {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+    }
+
+    .faq-summary:hover {
+      background: #1f2937 !important;
+    }
+
+    .faq-details {
+      border-top-color: #334155 !important;
+    }
+
+    .terms-date {
+      border-bottom-color: #334155 !important;
+    }
+
+    .terms-list,
+    .terms-list li,
+    .terms-list a {
+      color: #e2e8f0 !important;
+    }
+  }
 }

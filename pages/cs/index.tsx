@@ -105,8 +105,18 @@ const CustomerService: NextPage = () => {
               className="cs-tabs"
               TabIndicatorProps={{ className: "tab-indicator" }}
             >
-              <Tab icon={<HelpOutlineIcon />} iconPosition="start" label="FAQ" className="tab-item" />
-              <Tab icon={<CampaignIcon />} iconPosition="start" label="Notices" className="tab-item" />
+              <Tab
+                icon={<HelpOutlineIcon />}
+                iconPosition="start"
+                label="FAQ"
+                className="tab-item"
+              />
+              <Tab
+                icon={<CampaignIcon />}
+                iconPosition="start"
+                label="Notices"
+                className="tab-item"
+              />
               <Tab
                 icon={<DescriptionIcon />}
                 iconPosition="start"
@@ -135,10 +145,14 @@ const CustomerService: NextPage = () => {
                         expandIcon={<ExpandMoreIcon />}
                         className="faq-summary"
                       >
-                        <Typography className="faq-question">{faq.question}</Typography>
+                        <Typography className="faq-question">
+                          {faq.question}
+                        </Typography>
                       </AccordionSummary>
                       <AccordionDetails className="faq-details">
-                        <Typography className="faq-answer">{faq.answer}</Typography>
+                        <Typography className="faq-answer">
+                          {faq.answer}
+                        </Typography>
                       </AccordionDetails>
                     </Accordion>
                   ))}
@@ -148,12 +162,18 @@ const CustomerService: NextPage = () => {
 
             <TabPanel value={tabValue} index={1}>
               <Stack className="terms-content">
-                <Typography className="terms-title">Platform Notices</Typography>
+                <Typography className="terms-title">
+                  Platform Notices
+                </Typography>
                 <Stack className="terms-section">
                   {notices.map((notice) => (
                     <Stack key={notice.id} className="terms-section">
-                      <Typography className="section-title">{notice.title}</Typography>
-                      <Typography className="section-text">{notice.content}</Typography>
+                      <Typography className="section-title">
+                        {notice.title}
+                      </Typography>
+                      <Typography className="section-text">
+                        {notice.content}
+                      </Typography>
                       <Typography className="terms-date">
                         {new Date(notice.createdAt).toLocaleString()}
                       </Typography>
@@ -165,20 +185,30 @@ const CustomerService: NextPage = () => {
 
             <TabPanel value={tabValue} index={2}>
               <Stack className="terms-content">
-                <Typography className="terms-title">Terms and Conditions</Typography>
-                <Typography className="terms-date">Last Updated: February 13, 2026</Typography>
+                <Typography className="terms-title">
+                  Terms and Conditions
+                </Typography>
+                <Typography className="terms-date">
+                  Last Updated: February 13, 2026
+                </Typography>
 
                 <Stack className="terms-section">
-                  <Typography className="section-title">1. Acceptance of Terms</Typography>
+                  <Typography className="section-title">
+                    1. Acceptance of Terms
+                  </Typography>
                   <Typography className="section-text">
-                    By using MedBook you agree to platform terms, privacy policy, and usage guidelines.
+                    By using MedBook you agree to platform terms, privacy
+                    policy, and usage guidelines.
                   </Typography>
                 </Stack>
 
                 <Stack className="terms-section">
-                  <Typography className="section-title">2. Medical Disclaimer</Typography>
+                  <Typography className="section-title">
+                    2. Medical Disclaimer
+                  </Typography>
                   <Typography className="section-text">
-                    MedBook is a communication platform. Diagnosis and treatment responsibility belongs to licensed professionals.
+                    MedBook is a communication platform. Diagnosis and treatment
+                    responsibility belongs to licensed professionals.
                   </Typography>
                 </Stack>
 
@@ -186,6 +216,7 @@ const CustomerService: NextPage = () => {
                   <Typography className="section-title">3. Contact</Typography>
                   <ul className="terms-list">
                     <li>Email: support@medbook.com</li>
+                    <li>Email: mntokhirjonov@gmail.com</li>
                     <li>Phone: +8210 2076 7640</li>
                   </ul>
                 </Stack>

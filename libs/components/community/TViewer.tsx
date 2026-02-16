@@ -10,8 +10,8 @@ interface TViewerProps {
 const TViewer = ({ markdown }: TViewerProps) => {
   if (!markdown) {
     return (
-      <Stack sx={{ background: "#fff", mt: 2, borderRadius: "10px", minHeight: "100px", justifyContent: "center", alignItems: "center" }}>
-        <Typography sx={{ color: "#64748b", fontSize: "14px" }}>
+      <Stack sx={{ background: "transparent", mt: 2, borderRadius: "10px", minHeight: "100px", justifyContent: "center", alignItems: "center" }}>
+        <Typography sx={{ color: "#94a3b8", fontSize: "14px" }}>
           Preview will appear here...
         </Typography>
       </Stack>
@@ -19,7 +19,7 @@ const TViewer = ({ markdown }: TViewerProps) => {
   }
 
   return (
-    <Stack sx={{ background: "#fff", mt: 2, borderRadius: "10px" }}>
+    <Stack sx={{ background: "transparent", mt: 2, borderRadius: "10px" }}>
       <Box component={"div"} sx={{ m: 3 }}>
         <Viewer
           key={markdown}

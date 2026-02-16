@@ -5,38 +5,32 @@ import {
   Description,
   Medication,
 } from "@mui/icons-material";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { sweetMixinErrorAlert } from "@/libs/sweetAlert";
 import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
+import { useReactiveVar } from "@apollo/client";
+import { userVar } from "@/apollo/store";
 
-interface User {
-  name: string;
-  email: string;
-  image?: string;
-}
-
-interface HeroProps {
-  user?: User | null;
-}
-
-const Entrance = ({ user = null }: HeroProps) => {
+const Entrance = () => {
   const router = useRouter();
   const { t } = useMemberTranslation();
+  const user = useReactiveVar(userVar);
+  const isLoggedIn = Boolean(user?._id);
 
   const handleBookAppointment = () => {
-    router.push("/doctors");
+    router.push("/doctor");
   };
 
   const handleMyAppointments = () => {
-    if (user) {
-      router.push("/my-appointments");
+    if (isLoggedIn) {
+      router.push("/mypage?category=myAppointments");
     } else {
       sweetMixinErrorAlert(t("home.alert.loginFirst"));
     }
   };
 
   const handleMedicalRecords = () => {
-    if (user) {
+    if (isLoggedIn) {
       router.push("/medical-records");
     } else {
       sweetMixinErrorAlert(t("home.alert.loginFirst"));
@@ -44,7 +38,7 @@ const Entrance = ({ user = null }: HeroProps) => {
   };
 
   const handlePrescriptions = () => {
-    if (user) {
+    if (isLoggedIn) {
       router.push("/prescriptions");
     } else {
       sweetMixinErrorAlert(t("home.alert.loginFirst"));
@@ -58,7 +52,7 @@ const Entrance = ({ user = null }: HeroProps) => {
         <Box className="hero-greeting">
           <h1 className="hero-title">
             {t("home.hello")}
-            {user ? `, ${user.name.split(" ")[0]}` : ""}!
+            {isLoggedIn ? `, ${(user?.memberFullName || user?.memberNick || "User").split(" ")[0]}` : ""}!
           </h1>
           <p className="hero-subtitle">{t("home.subtitle")}</p>
         </Box>
