@@ -179,7 +179,113 @@
         }
       }
     }
-        // Portal Showcase Styles
+    .how-it-works {
+      width: 100%;
+      padding: 2.25rem 0 1.5rem;
+      background: #ffffff;
+
+      .how-it-works-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .how-it-works-header {
+        margin-bottom: 1.15rem;
+        gap: 0.35rem;
+      }
+
+      .how-it-works-title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+      }
+
+      .how-it-works-subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #64748b;
+      }
+
+      .how-it-works-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .how-it-works-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem;
+        gap: 0.6rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      }
+
+      .how-it-works-badge {
+        width: fit-content;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.74rem;
+        font-weight: 700;
+      }
+
+      .how-it-works-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        color: #2563eb;
+
+        svg {
+          font-size: 1.35rem;
+        }
+      }
+
+      .how-it-works-card-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .how-it-works-card-desc {
+        margin: 0;
+        font-size: 0.86rem;
+        line-height: 1.45;
+        color: #64748b;
+      }
+
+      @media (max-width: 900px) {
+        .how-it-works-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        padding: 1.5rem 0 1rem;
+
+        .how-it-works-container {
+          padding: 0 1rem;
+        }
+
+        .how-it-works-title {
+          font-size: 1.35rem;
+        }
+
+        .how-it-works-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+    // Portal Showcase Styles
     .portal-showcase {
       width: 100%;
       padding: 2rem 0;
@@ -741,6 +847,216 @@
         }
       }
     }
+    .health-tips {
+      width: 100%;
+      padding: 2.5rem 0;
+      background: #ffffff;
+
+      .health-tips-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .health-tips-header {
+        margin-bottom: 1.1rem;
+        gap: 0.35rem;
+      }
+
+      .health-tips-title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .health-tips-subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #64748b;
+      }
+
+      .health-tips-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .health-tip-card {
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        gap: 0.5rem;
+      }
+
+      .health-tip-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #2563eb;
+      }
+
+      .health-tip-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .health-tip-desc {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #64748b;
+        line-height: 1.45;
+      }
+
+      @media (max-width: 900px) {
+        .health-tips-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        padding: 1.5rem 0;
+
+        .health-tips-container {
+          padding: 0 1rem;
+        }
+
+        .health-tips-title {
+          font-size: 1.35rem;
+        }
+
+        .health-tips-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+    .trust-security {
+      width: 100%;
+      padding: 2.5rem 0;
+      background: #ffffff;
+
+      .trust-security-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .trust-security-header {
+        margin-bottom: 1.1rem;
+        gap: 0.35rem;
+      }
+
+      .trust-security-title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .trust-security-subtitle {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #64748b;
+      }
+
+      .trust-security-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .trust-security-card {
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        gap: 0.5rem;
+      }
+
+      .trust-security-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #2563eb;
+      }
+
+      .trust-security-card-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .trust-security-card-desc {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #64748b;
+        line-height: 1.45;
+      }
+
+      .trust-security-footer {
+        margin-top: 1rem;
+        padding: 1rem 1.1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+      }
+
+      .trust-security-note {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #475569;
+      }
+
+      .trust-security-btn {
+        border-color: #2563eb !important;
+        color: #2563eb !important;
+        font-weight: 600 !important;
+      }
+
+      @media (max-width: 1100px) {
+        .trust-security-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        padding: 1.5rem 0;
+
+        .trust-security-container {
+          padding: 0 1rem;
+        }
+
+        .trust-security-title {
+          font-size: 1.35rem;
+        }
+
+        .trust-security-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .trust-security-footer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    }
     // Events Section Styles
     .events {
       width: 100%;
@@ -1026,4 +1342,5 @@
     }
   }
 }
+
 

@@ -1,7 +1,10 @@
 import Entrance from "@/libs/components/homepage/Entrance";
 import Events from "@/libs/components/homepage/Events";
+import HowItWorks from "@/libs/components/homepage/HowItWorks";
 import BrowseBySpecialization from "@/libs/components/homepage/Filter";
 import TopRatedDoctors from "@/libs/components/homepage/TopDoctors";
+import HealthTips from "@/libs/components/homepage/HealthTips";
+import TrustSecurity from "@/libs/components/homepage/TrustSecurity";
 import withLayoutMain from "@/libs/components/layout/LayoutMember";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
 import { Stack } from "@mui/material";
@@ -20,9 +23,12 @@ const Home: NextPage = () => {
     return (
       <Stack className={"home-page mobile"}>
         <Entrance />
+        <HowItWorks />
         <PortalShowcase />
         <BrowseBySpecialization />
         <TopRatedDoctors />
+        <HealthTips />
+        <TrustSecurity />
         <Events />
       </Stack>
     );
@@ -30,9 +36,12 @@ const Home: NextPage = () => {
     return (
       <Stack className={"home-page"}>
         <Entrance />
+        <HowItWorks />
         <PortalShowcase />
         <BrowseBySpecialization />
         <TopRatedDoctors />
+        <HealthTips />
+        <TrustSecurity />
         <Events />
       </Stack>
     );
@@ -40,3 +49,5 @@ const Home: NextPage = () => {
 };
 
 export default withLayoutMain(Home);
+
+

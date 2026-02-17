@@ -491,6 +491,7 @@
 
   /* Generic cards/panels */
   .hero-card,
+  .how-it-works-card,
   .specialization-card,
   .doctor-card,
   .event-card,
@@ -513,8 +514,11 @@
 
   /* Section backgrounds still light in some pages */
   .home-page .hero,
+  .home-page .how-it-works,
   .home-page .browse-specialization,
   .home-page .events,
+  .home-page .health-tips,
+  .home-page .trust-security,
   .home-page .top-rated-doctors,
   .home-page .portal-showcase {
     background: #0f172a !important;
@@ -593,6 +597,53 @@
   .MuiPagination-root .MuiPaginationItem-root {
     color: #cbd5e1 !important;
     border-color: #334155 !important;
+  }
+
+  .how-it-works {
+    .how-it-works-card {
+      background: #111827 !important;
+      border-color: #334155 !important;
+    }
+
+    .how-it-works-icon {
+      background: #1f2937 !important;
+      color: #93c5fd !important;
+    }
+
+    .how-it-works-badge {
+      background: #1e3a8a !important;
+      color: #dbeafe !important;
+    }
+  }
+
+  .health-tips {
+    .health-tip-card {
+      background: #111827 !important;
+      border-color: #334155 !important;
+    }
+
+    .health-tip-icon {
+      background: #1f2937 !important;
+      color: #93c5fd !important;
+    }
+  }
+
+  .trust-security {
+    .trust-security-card,
+    .trust-security-footer {
+      background: #111827 !important;
+      border-color: #334155 !important;
+    }
+
+    .trust-security-icon {
+      background: #1f2937 !important;
+      color: #93c5fd !important;
+    }
+
+    .trust-security-btn {
+      border-color: #60a5fa !important;
+      color: #93c5fd !important;
+    }
   }
 
   /* Doctors list page: explicit dark overrides */
