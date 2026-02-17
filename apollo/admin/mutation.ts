@@ -292,3 +292,52 @@ export const REMOVE_COMMENTS_BY_ADMIN = gql`
     }
   }
 `;
+
+/******************
+ *     NOTICES    *
+ *****************/
+
+export const CREATE_NOTICE = gql`
+  mutation CreateNotice($input: NoticeInput!) {
+    createNotice(input: $input) {
+      _id
+      title
+      content
+      status
+      target
+      authorId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const UPDATE_NOTICE_BY_ADMIN = gql`
+  mutation UpdateNoticeByAdmin($input: UpdateNoticeInput!) {
+    updateNoticeByAdmin(input: $input) {
+      _id
+      title
+      content
+      status
+      target
+      authorId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const REMOVE_NOTICE_BY_ADMIN = gql`
+  mutation RemoveNoticeByAdmin($input: String!) {
+    removeNoticeByAdmin(noticeId: $input) {
+      _id
+      title
+      content
+      status
+      target
+      authorId
+      createdAt
+      updatedAt
+    }
+  }
+`;

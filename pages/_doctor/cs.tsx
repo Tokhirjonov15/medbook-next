@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NextPage } from "next";
+import { useQuery } from "@apollo/client";
 import {
   Accordion,
   AccordionDetails,
@@ -15,9 +16,9 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import DescriptionIcon from "@mui/icons-material/Description";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
+import { GET_NOTICES } from "@/apollo/doctor/query";
 import {
   defaultFaqs,
-  defaultNotices,
   getStoredCsPosts,
 } from "@/libs/configs/csContent";
 
@@ -46,6 +47,22 @@ const DoctorCustomerService: NextPage = () => {
   const [tabValue, setTabValue] = useState(0);
   const [expanded, setExpanded] = useState<string | false>("faq1");
   const [refreshTick, setRefreshTick] = useState(0);
+  const noticeQueryInput = useMemo(
+    () => ({
+      page: 1,
+      limit: 100,
+      sort: "createdAt",
+      direction: "DESC",
+      search: {},
+    }),
+    [],
+  );
+
+  const { data: noticesData, loading: noticesLoading } = useQuery(GET_NOTICES, {
+    fetchPolicy: "cache-and-network",
+    variables: { input: noticeQueryInput },
+    notifyOnNetworkStatusChange: true,
+  });
 
   useEffect(() => {
     const onFocus = () => setRefreshTick((prev) => prev + 1);
@@ -67,16 +84,23 @@ const DoctorCustomerService: NextPage = () => {
   }, [posts]);
 
   const notices = useMemo(() => {
-    const customNotices = posts
-      .filter((item) => item.type === "NOTICE")
+    const dbNotices = (noticesData?.getNotices?.list ?? [])
+      .filter((item: any) => item?.target === "ALL" || item?.target === "DOCTOR")
+      .map((item: any) => ({
+        id: item?._id,
+        title: item?.title,
+        content: item?.content,
+        createdAt: item?.createdAt,
+      }));
+    const customNotices = posts.filter((item) => item.type === "NOTICE")
       .map((item) => ({
         id: item.id,
         title: item.title,
         content: item.content,
         createdAt: item.createdAt,
       }));
-    return [...customNotices, ...defaultNotices];
-  }, [posts]);
+    return [...dbNotices, ...customNotices];
+  }, [noticesData, posts]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -150,6 +174,9 @@ const DoctorCustomerService: NextPage = () => {
               <Stack className="terms-content">
                 <Typography className="terms-title">Platform Notices</Typography>
                 <Stack className="terms-section">
+                  {noticesLoading && notices.length === 0 && (
+                    <Typography className="section-text">Loading notices...</Typography>
+                  )}
                   {notices.map((notice) => (
                     <Stack key={notice.id} className="terms-section">
                       <Typography className="section-title">{notice.title}</Typography>

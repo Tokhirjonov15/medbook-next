@@ -549,3 +549,51 @@ export const GET_MEMBER_FOLLOWERS = gql`
   }
 `;
 
+/*****************
+ *    NOTICES    *
+ ****************/
+
+export const GET_NOTICES = gql`
+  query GetNotices($input: NoticeInquiry!) {
+    getNotices(input: $input) {
+      list {
+        _id
+        title
+        content
+        status
+        target
+        authorId
+        createdAt
+        updatedAt
+        memberData {
+          _id
+          memberNick
+          memberType
+          memberStatus
+          memberPhone
+          memberImage
+          memberGender
+          memberArticles
+          memberFollowers
+          memberLikes
+          memberFollowings
+          memberComments
+          memberWarnings
+          memberBlocks
+          isActive
+          lastLogin
+          bloodGroup
+          allergies
+          chronicDiseases
+          doctorProfile
+          createdAt
+          updatedAt
+          accessToken
+        }
+      }
+      metaCounter {
+        total
+      }
+    }
+  }
+`;
