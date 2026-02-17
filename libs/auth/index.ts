@@ -9,6 +9,15 @@ import { MemberType } from "../enums/member.enum";
 import { Gender } from "../enums/gender.enum";
 import { Specialization } from "../enums/specialization.enum";
 
+const extractGraphQLErrorMessage = (err: any): string => {
+  return (
+    err?.graphQLErrors?.[0]?.message ??
+    err?.networkError?.result?.errors?.[0]?.message ??
+    err?.message?.replace("GraphQL error: ", "") ??
+    ""
+  );
+};
+
 export function getJwtToken(): string {
   if (typeof window === "undefined") return "";
   return localStorage.getItem("accessToken") ?? "";
@@ -49,7 +58,6 @@ export const logIn = async (nick: string, password: string): Promise<void> => {
   } catch (err) {
     console.warn("login err", err);
     logOut(false);
-    throw err;
   }
 };
 
@@ -72,7 +80,7 @@ const requestJwtToken = async ({
     const { accessToken } = result?.data?.login ?? {};
     return { jwtToken: accessToken };
   } catch (err: any) {
-    const gqlMessage = err?.graphQLErrors?.[0]?.message ?? "";
+    const gqlMessage = extractGraphQLErrorMessage(err);
 
     // Members and doctors are stored in separate collections.
     // If user is not found in members, try doctor login with the same credentials.
@@ -87,26 +95,14 @@ const requestJwtToken = async ({
         const { accessToken } = doctorResult?.data?.DoctorLogin ?? {};
         return { jwtToken: accessToken };
       } catch (doctorErr: any) {
-        const doctorMessage = doctorErr?.graphQLErrors?.[0]?.message ?? "";
-        if (doctorMessage.includes("password")) {
-          await sweetMixinErrorAlert("Please check your password again");
-        } else if (doctorMessage.includes("blocked")) {
-          await sweetMixinErrorAlert("User has been blocked!");
-        } else {
-          await sweetMixinErrorAlert("Login failed. Please try again.");
-        }
-        throw new Error("token error");
+        const doctorMessage = extractGraphQLErrorMessage(doctorErr);
+        await sweetMixinErrorAlert(doctorMessage || "Login failed. Please try again.");
+        throw new Error(doctorMessage || "token error");
       }
     }
 
-    if (gqlMessage.includes("login and password do not match") || gqlMessage.includes("password")) {
-      await sweetMixinErrorAlert("Please check your password again");
-    } else if (gqlMessage.includes("blocked")) {
-      await sweetMixinErrorAlert("User has been blocked!");
-    } else {
-      await sweetMixinErrorAlert("Login failed. Please try again.");
-    }
-    throw new Error("token error");
+    await sweetMixinErrorAlert(gqlMessage || "Login failed. Please try again.");
+    throw new Error(gqlMessage || "token error");
   }
 };
 
@@ -128,7 +124,6 @@ export const signUpMember = async (
   } catch (err) {
     console.warn("signup member err", err);
     logOut(false);
-    throw err;
   }
 };
 
@@ -162,7 +157,6 @@ export const signUpDoctor = async (input: {
   } catch (err) {
     console.warn("signup doctor err", err);
     logOut(false);
-    throw err;
   }
 };
 

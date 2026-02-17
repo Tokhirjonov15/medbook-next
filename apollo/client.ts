@@ -13,6 +13,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { onError } from "@apollo/client/link/error";
 import { getJwtToken } from "../libs/auth";
 import { TokenRefreshLink } from "apollo-link-token-refresh";
+import { sweetErrorAlert } from "@/libs/sweetAlert";
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
 const GRAPHQL_HTTP_URI =
@@ -57,7 +58,6 @@ function createIsomorphicLink() {
           ...getHeaders(),
         },
       }));
-      console.warn("requesting.. ", operation);
       return forward(operation);
     });
 
@@ -73,13 +73,28 @@ function createIsomorphicLink() {
       },
     });
 
-    const errorLink = onError(({ graphQLErrors, networkError, response }) => {
+    const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+      const opName = operation?.operationName ?? "";
+      const authManagedOperations = new Set([
+        "Login",
+        "DoctorLogin",
+        "SignUp",
+        "Signup",
+        "DoctorSignup",
+        "ForgotPassword",
+        "ResetPassword",
+      ]);
+      const isAuthManaged = authManagedOperations.has(opName);
+
       if (graphQLErrors) {
-        graphQLErrors.map(({ message, locations, path, extensions }) =>
+        graphQLErrors.map(({ message, locations, path, extensions }) => {
           console.log(
             `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-          ),
-        );
+          );
+          if (!isAuthManaged && !message.includes("input")) {
+            sweetErrorAlert(message);
+          }
+        });
       }
       if (networkError) console.log(`[Network error]: ${networkError}`);
       // @ts-ignore

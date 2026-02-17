@@ -40,10 +40,20 @@ const FRAMES: FrameItem[] = [
   },
 ];
 
+const FRONT_IMAGE_PATHS = [
+  "/img/animephoto.jpg",
+  "/img/hospital1.jpg",
+  "/img/clinic.jpg",
+];
+
+const BACK_IMAGE_PATHS = ["/img/logo.png", "/img/logo.png", "/img/logo.png"];
+
 function PortalScene({ isDark }: { isDark: boolean }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const controlsRef = useRef<any>(null);
   const { scene } = useThree();
+  const frontTextures = useTexture(FRONT_IMAGE_PATHS);
+  const backTextures = useTexture(BACK_IMAGE_PATHS);
   const defaultPosition = useMemo(() => new THREE.Vector3(0, 0, 3.2), []);
   const defaultTarget = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
@@ -85,13 +95,16 @@ function PortalScene({ isDark }: { isDark: boolean }) {
     <>
       <ambientLight intensity={0.9} />
       <directionalLight position={[3, 4, 2]} intensity={1.1} />
-      {FRAMES.map((frame) => (
+      {FRAMES.map((frame, index) => (
         <PortalFrame
           key={frame.id}
           frame={frame}
+          frameIndex={index}
           activeId={activeId}
           setActiveId={setActiveId}
           isDark={isDark}
+          frontTexture={frontTextures[index % frontTextures.length]}
+          backTexture={backTextures[index % backTextures.length]}
         />
       ))}
       <CameraControls
@@ -106,17 +119,22 @@ function PortalScene({ isDark }: { isDark: boolean }) {
 
 function PortalFrame({
   frame,
+  frameIndex,
   activeId,
   setActiveId,
   isDark,
+  frontTexture,
+  backTexture,
 }: {
   frame: FrameItem;
+  frameIndex: number;
   activeId: string | null;
   setActiveId: (id: string | null) => void;
   isDark: boolean;
+  frontTexture: THREE.Texture;
+  backTexture: THREE.Texture;
 }) {
   const isActive = activeId === frame.id;
-  const cardTexture = useTexture("/img/animephoto.jpg");
 
   return (
     <group
@@ -157,32 +175,44 @@ function PortalFrame({
       <mesh name={frame.id}>
         <planeGeometry args={[1, 1.58]} />
         <meshStandardMaterial
-          map={cardTexture}
+          map={frontTexture}
           color={isDark ? "#cbd5e1" : "#ffffff"}
           side={THREE.DoubleSide}
         />
       </mesh>
       <group position={[0, 0, 0.05]}>
-        <PortalContent variant={frame.id} />
+        <PortalContent
+          variant={frame.id}
+          texture={backTexture}
+          frameIndex={frameIndex}
+        />
       </group>
     </group>
   );
 }
 
-function PortalContent({ variant }: { variant: string }) {
+function PortalContent({
+  variant,
+  texture,
+  frameIndex,
+}: {
+  variant: string;
+  texture: THREE.Texture;
+  frameIndex: number;
+}) {
   const spinRef = useRef<THREE.Mesh | null>(null);
 
   useFrame((_, dt) => {
     if (!spinRef.current) return;
-    spinRef.current.rotation.y += dt * 0.6;
+    spinRef.current.rotation.y += dt * (0.35 + frameIndex * 0.08);
   });
 
   if (variant === "01") {
     return (
       <group position={[0, -0.12, -1.6]}>
         <mesh ref={spinRef}>
-          <torusKnotGeometry args={[0.34, 0.1, 120, 20]} />
-          <meshStandardMaterial color="#3b82f6" metalness={0.35} roughness={0.25} />
+          <planeGeometry args={[0.56, 0.56]} />
+          <meshStandardMaterial map={texture} transparent />
         </mesh>
       </group>
     );
@@ -192,8 +222,8 @@ function PortalContent({ variant }: { variant: string }) {
     return (
       <group position={[0, -0.1, -1.8]}>
         <mesh ref={spinRef}>
-          <octahedronGeometry args={[0.44, 0]} />
-          <meshStandardMaterial color="#10b981" metalness={0.25} roughness={0.3} />
+          <planeGeometry args={[0.64, 0.48]} />
+          <meshStandardMaterial map={texture} transparent />
         </mesh>
       </group>
     );
@@ -202,8 +232,8 @@ function PortalContent({ variant }: { variant: string }) {
   return (
     <group position={[0, -0.05, -1.7]}>
       <mesh ref={spinRef}>
-        <icosahedronGeometry args={[0.4, 0]} />
-        <meshStandardMaterial color="#8b5cf6" metalness={0.28} roughness={0.28} />
+        <planeGeometry args={[0.58, 0.58]} />
+        <meshStandardMaterial map={texture} transparent />
       </mesh>
     </group>
   );
@@ -241,7 +271,10 @@ const PortalShowcase = () => {
               // no-op: keeps canvas interactions smooth
             }}
           >
-            <color attach="background" args={[isDark ? "#0f172a" : "#f0f4ff"]} />
+            <color
+              attach="background"
+              args={[isDark ? "#0f172a" : "#f0f4ff"]}
+            />
             <PortalScene isDark={isDark} />
           </Canvas>
         </Box>
