@@ -44,7 +44,7 @@ const CommunityCard = ({ article, onLike }: CommunityCardProps) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -117,7 +117,10 @@ const CommunityCard = ({ article, onLike }: CommunityCardProps) => {
                   sx={{ p: 0 }}
                 >
                   {article.liked ? (
-                    <FavoriteIcon className="stat-icon liked" style={{ color: "#ef4444" }} />
+                    <FavoriteIcon
+                      className="stat-icon liked"
+                      style={{ color: "#ef4444" }}
+                    />
                   ) : (
                     <FavoriteBorderIcon className="stat-icon" />
                   )}

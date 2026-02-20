@@ -10,6 +10,8 @@ import { GET_DOCTOR, GET_MEMBER_APPOINTMENTS } from "@/apollo/user/query";
 import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
 import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
 import { Doctor } from "@/libs/types/doctors/doctor";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface GetAppointmentsResponse {
   getMyAppointments: Appointments;
@@ -30,6 +32,7 @@ interface GetDoctorVariables {
 const MyAppointmentDetail: NextPage = () => {
   const router = useRouter();
   const user = useReactiveVar(userVar);
+  const { t } = useMemberTranslation();
   const rawId = router.query.id;
   const appointmentId = Array.isArray(rawId) ? rawId[0] : rawId;
 
@@ -49,7 +52,7 @@ const MyAppointmentDetail: NextPage = () => {
       page: 1,
       limit: 300,
       sort: "appointmentDate",
-      direction: "DESC" as AppointmentsInquiry["direction"],
+      direction: Direction.DESC,
       search: {},
     }),
     [],
@@ -120,10 +123,10 @@ const MyAppointmentDetail: NextPage = () => {
       <div id="mypage-page">
         <Stack className="mypage-container">
           <Box className="mypage-panel">
-            <Typography className="mypage-section-title">Appointment Detail</Typography>
+            <Typography className="mypage-section-title">{t("mypage.appointment.detailTitle", "Appointment Detail")}</Typography>
             <Box className="mypage-list-item">
               <Typography>
-                Appointment detail not found.
+                {t("mypage.appointment.notFound", "Appointment detail not found.")}
               </Typography>
             </Box>
           </Box>
@@ -142,30 +145,30 @@ const MyAppointmentDetail: NextPage = () => {
             onClick={() => router.back()}
             sx={{ mb: 1.5, borderRadius: "10px" }}
           >
-            Back
+            {t("common.back", "Back")}
           </Button>
-          <Typography className="mypage-section-title">Appointment Detail</Typography>
+          <Typography className="mypage-section-title">{t("mypage.appointment.detailTitle", "Appointment Detail")}</Typography>
 
           <Stack spacing={1.2}>
             <Box className="mypage-list-item">
-              <Typography>Doctor: {doctorName}</Typography>
+              <Typography>{t("mypage.appointment.doctor", "Doctor")}: {doctorName}</Typography>
             </Box>
             <Box className="mypage-list-item">
               <Typography>
-                Appointment Date & Time: {appointmentDateLabel} {appointmentTimeLabel}
+                {t("mypage.appointment.dateTime", "Appointment Date & Time")}: {appointmentDateLabel} {appointmentTimeLabel}
               </Typography>
             </Box>
             <Box className="mypage-list-item">
-              <Typography>Booked At: {bookedAtLabel}</Typography>
+              <Typography>{t("mypage.appointment.bookedAt", "Booked At")}: {bookedAtLabel}</Typography>
             </Box>
             <Box className="mypage-list-item">
-              <Typography>Reason: {detail.reason || "-"}</Typography>
+              <Typography>{t("mypage.appointment.reason", "Reason")}: {detail.reason || "-"}</Typography>
             </Box>
             <Box className="mypage-list-item">
-              <Typography>Symptoms: {symptomsLabel}</Typography>
+              <Typography>{t("mypage.appointment.symptoms", "Symptoms")}: {symptomsLabel}</Typography>
             </Box>
             <Box className="mypage-list-item">
-              <Typography>Payment Status: {detail.paymentStatus || "-"}</Typography>
+              <Typography>{t("mypage.appointment.paymentStatus", "Payment Status")}: {detail.paymentStatus || "-"}</Typography>
             </Box>
           </Stack>
         </Box>

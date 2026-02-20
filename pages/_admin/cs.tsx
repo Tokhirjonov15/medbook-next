@@ -22,6 +22,7 @@ import {
   sweetErrorHandlingForAdmin,
   sweetMixinSuccessAlert,
 } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
 
 type NoticeTarget = "ALL" | "PATIENT" | "DOCTOR";
 type NoticeStatus = "ACTIVE" | "INACTIVE" | "DELETED";
@@ -41,7 +42,7 @@ const AdminCsPage: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {},
     }),
     [],

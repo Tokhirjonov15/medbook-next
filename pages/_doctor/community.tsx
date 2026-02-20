@@ -25,6 +25,7 @@ import {
   sweetTopSmallSuccessAlert,
 } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface DoctorCommunityListProps {
   initialInput: BoardArticlesInquiry;
@@ -299,7 +300,7 @@ DoctorCommunityList.defaultProps = {
     page: 1,
     limit: 6,
     sort: "createdAt",
-    direction: "DESC" as unknown as BoardArticlesInquiry["direction"],
+    direction: Direction.DESC,
     search: {},
   },
 };

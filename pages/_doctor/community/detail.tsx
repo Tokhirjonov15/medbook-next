@@ -41,6 +41,7 @@ import {
   sweetMixinErrorAlert,
   sweetTopSmallSuccessAlert,
 } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
 
 const ToastViewerComponent = dynamic(
   () => import("@/libs/components/community/TViewer"),
@@ -168,7 +169,7 @@ const DoctorCommunityDetail: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {
         commentRefId: articleId || "",
       },

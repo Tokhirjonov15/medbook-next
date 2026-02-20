@@ -21,6 +21,8 @@ import {
   defaultFaqs,
   getStoredCsPosts,
 } from "@/libs/configs/csContent";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,6 +46,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const CustomerService: NextPage = () => {
+  const { t } = useMemberTranslation();
   const [tabValue, setTabValue] = useState(0);
   const [expanded, setExpanded] = useState<string | false>("faq1");
   const [refreshTick, setRefreshTick] = useState(0);
@@ -52,7 +55,7 @@ const CustomerService: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {},
     }),
     [],
@@ -115,9 +118,9 @@ const CustomerService: NextPage = () => {
     <div id="customer-service-page">
       <Stack className="cs-container">
         <Stack className="cs-header">
-          <Typography className="page-title">Customer Service</Typography>
+          <Typography className="page-title">{t("cs.title", "Customer Service")}</Typography>
           <Typography className="page-subtitle">
-            Find answers, platform notices, and terms.
+            {t("cs.subtitle", "Find answers, platform notices, and terms.")}
           </Typography>
         </Stack>
 
@@ -132,19 +135,19 @@ const CustomerService: NextPage = () => {
               <Tab
                 icon={<HelpOutlineIcon />}
                 iconPosition="start"
-                label="FAQ"
+                label={t("cs.tab.faq", "FAQ")}
                 className="tab-item"
               />
               <Tab
                 icon={<CampaignIcon />}
                 iconPosition="start"
-                label="Notices"
+                label={t("cs.tab.notices", "Notices")}
                 className="tab-item"
               />
               <Tab
                 icon={<DescriptionIcon />}
                 iconPosition="start"
-                label="Terms & Conditions"
+                label={t("cs.tab.terms", "Terms & Conditions")}
                 className="tab-item"
               />
             </Tabs>
@@ -154,7 +157,7 @@ const CustomerService: NextPage = () => {
             <TabPanel value={tabValue} index={0}>
               <Stack className="faq-content">
                 <Typography className="section-intro">
-                  Admin-added FAQ entries will also appear here automatically.
+                  {t("cs.faq.intro", "Admin-added FAQ entries will also appear here automatically.")}
                 </Typography>
 
                 <Stack className="faq-list">
@@ -187,11 +190,11 @@ const CustomerService: NextPage = () => {
             <TabPanel value={tabValue} index={1}>
               <Stack className="terms-content">
                 <Typography className="terms-title">
-                  Platform Notices
+                  {t("cs.notices.title", "Platform Notices")}
                 </Typography>
                 <Stack className="terms-section">
                   {noticesLoading && notices.length === 0 && (
-                    <Typography className="section-text">Loading notices...</Typography>
+                    <Typography className="section-text">{t("cs.notices.loading", "Loading notices...")}</Typography>
                   )}
                   {notices.map((notice) => (
                     <Stack key={notice.id} className="terms-section">
@@ -213,7 +216,7 @@ const CustomerService: NextPage = () => {
             <TabPanel value={tabValue} index={2}>
               <Stack className="terms-content">
                 <Typography className="terms-title">
-                  Terms and Conditions
+                  {t("cs.terms.title", "Terms and Conditions")}
                 </Typography>
                 <Typography className="terms-date">
                   Last Updated: February 13, 2026

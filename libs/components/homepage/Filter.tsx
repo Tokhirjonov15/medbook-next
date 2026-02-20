@@ -27,7 +27,7 @@ import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 import { GET_DOCTORS } from "@/apollo/user/query";
 import { Specialization } from "@/libs/enums/specialization.enum";
 import { Doctor } from "@/libs/types/doctors/doctor";
-import { T } from "@/libs/types/common";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface SpecializationCard {
   type: Specialization;
@@ -39,13 +39,16 @@ interface SpecializationCard {
 
 const INITIAL_CARD_COUNT = 8;
 
+const normalizeSpecializationKey = (value: unknown): string =>
+  String(value || "")
+    .trim()
+    .replace(/[-\s]+/g, "_")
+    .toUpperCase();
+
 const BrowseBySpecialization = () => {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
   const { t } = useMemberTranslation();
-  const [doctorSpecialization, setDoctorSpecialization] = useState<Doctor[]>(
-    [],
-  );
 
   const specializations: SpecializationCard[] = [
     {
@@ -191,10 +194,7 @@ const BrowseBySpecialization = () => {
   ];
 
   const {
-    loading: getSpecsLoading,
     data: getSpecsData,
-    error: getSpecsError,
-    refetch: getSpecsRefetch,
   } = useQuery(GET_DOCTORS, {
     fetchPolicy: "cache-and-network",
     variables: {
@@ -202,14 +202,11 @@ const BrowseBySpecialization = () => {
         page: 1,
         limit: 1000,
         sort: "doctorViews",
-        direction: "DESC",
+        direction: Direction.DESC,
         search: {},
       },
     },
     notifyOnNetworkStatusChange: true,
-    onCompleted: (data: T) => {
-      setDoctorSpecialization(data?.getDoctors?.list ?? []);
-    },
   });
 
   const doctors: Doctor[] = getSpecsData?.getDoctors?.list ?? [];
@@ -222,7 +219,7 @@ const BrowseBySpecialization = () => {
           : [];
 
       specList.forEach((spec) => {
-        const key = String(spec);
+        const key = normalizeSpecializationKey(spec);
         if (!key) return;
         acc[key] = (acc[key] ?? 0) + 1;
       });
@@ -283,7 +280,7 @@ const BrowseBySpecialization = () => {
                   {t(spec.i18nKey || "", spec.name)}
                 </h3>
                 <p className="specialization-card-count">
-                  {doctorCountBySpecialization[spec.type] ?? 0}{" "}
+                  {doctorCountBySpecialization[normalizeSpecializationKey(spec.type)] ?? 0}{" "}
                   {t("common.doctors")}
                 </p>
               </Box>
@@ -310,7 +307,7 @@ const BrowseBySpecialization = () => {
                     {t(spec.i18nKey || "", spec.name)}
                   </h3>
                   <p className="specialization-card-count">
-                    {doctorCountBySpecialization[spec.type] ?? 0}{" "}
+                    {doctorCountBySpecialization[normalizeSpecializationKey(spec.type)] ?? 0}{" "}
                     {t("common.doctors")}
                   </p>
                 </Box>

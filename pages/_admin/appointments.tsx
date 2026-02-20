@@ -22,10 +22,14 @@ import { UPDATE_APPOINTMENTS_BY_ADMIN } from "@/apollo/admin/mutation";
 import { Appointment, Appointments } from "@/libs/types/appoinment/appoinment";
 import { AllAppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
 import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
-import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import {
+  sweetErrorHandling,
+  sweetTopSmallSuccessAlert,
+} from "@/libs/sweetAlert";
 import { Doctors } from "@/libs/types/doctors/doctor";
 import { Members } from "@/libs/types/members/member";
 import { MemberType } from "@/libs/enums/member.enum";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetAllAppointmentsByAdminResponse {
   getAllAppointmentByAdmin: Appointments;
@@ -78,7 +82,11 @@ const toAbsoluteMediaUrl = (value?: string): string => {
   return src;
 };
 
-const formatDateTime = (dateValue?: Date | string, start?: string, end?: string) => {
+const formatDateTime = (
+  dateValue?: Date | string,
+  start?: string,
+  end?: string,
+) => {
   if (!dateValue) return "Not scheduled";
   const date = new Date(dateValue);
   const datePart = date.toLocaleDateString("en-US", {
@@ -96,27 +104,28 @@ const AdminAppointmentsPage: NextPage = () => {
     data: getAppointmentsData,
     error: getAppointmentsError,
     refetch: getAppointmentsRefetch,
-  } = useQuery<GetAllAppointmentsByAdminResponse, GetAllAppointmentsByAdminVariables>(
-    GET_ALL_APPOINTMENTS_BY_ADMIN,
-    {
-      fetchPolicy: "cache-and-network",
-      variables: {
-        input: {
-          page: 1,
-          limit: 100,
-          sort: "createdAt",
-          direction: "DESC",
-          search: {},
-        },
+  } = useQuery<
+    GetAllAppointmentsByAdminResponse,
+    GetAllAppointmentsByAdminVariables
+  >(GET_ALL_APPOINTMENTS_BY_ADMIN, {
+    fetchPolicy: "cache-and-network",
+    variables: {
+      input: {
+        page: 1,
+        limit: 100,
+        sort: "createdAt",
+        direction: Direction.DESC,
+        search: {},
       },
-      notifyOnNetworkStatusChange: true,
     },
-  );
+    notifyOnNetworkStatusChange: true,
+  });
 
-  const [updateAppointmentByAdmin, { loading: updateAppointmentLoading }] = useMutation<
-    UpdateAppointmentByAdminResponse,
-    UpdateAppointmentByAdminVariables
-  >(UPDATE_APPOINTMENTS_BY_ADMIN);
+  const [updateAppointmentByAdmin, { loading: updateAppointmentLoading }] =
+    useMutation<
+      UpdateAppointmentByAdminResponse,
+      UpdateAppointmentByAdminVariables
+    >(UPDATE_APPOINTMENTS_BY_ADMIN);
 
   const { data: getDoctorsData } = useQuery<GetAllDoctorsByAdminResponse>(
     GET_ALL_DOCTORS_BY_ADMIN,
@@ -127,7 +136,7 @@ const AdminAppointmentsPage: NextPage = () => {
           page: 1,
           limit: 1000,
           sort: "createdAt",
-          direction: "DESC",
+          direction: Direction.DESC,
           search: {},
         },
       },
@@ -143,7 +152,7 @@ const AdminAppointmentsPage: NextPage = () => {
           page: 1,
           limit: 1000,
           sort: "createdAt",
-          direction: "DESC",
+          direction: Direction.DESC,
           search: { memberType: MemberType.PATIENT },
         },
       },
@@ -151,11 +160,13 @@ const AdminAppointmentsPage: NextPage = () => {
     },
   );
 
-  const appointments = getAppointmentsData?.getAllAppointmentByAdmin?.list ?? [];
+  const appointments =
+    getAppointmentsData?.getAllAppointmentByAdmin?.list ?? [];
   const doctorNameMap = React.useMemo(() => {
     const map: Record<string, string> = {};
     (getDoctorsData?.getAllDoctorsByAdmin?.list ?? []).forEach((doctor) => {
-      map[doctor._id] = doctor.memberFullName || doctor.memberNick || doctor._id;
+      map[doctor._id] =
+        doctor.memberFullName || doctor.memberNick || doctor._id;
     });
     return map;
   }, [getDoctorsData]);
@@ -181,7 +192,10 @@ const AdminAppointmentsPage: NextPage = () => {
     return map;
   }, [getMembersData]);
 
-  const onChangeStatus = async (appointmentId: string, next: AppointmentStatus) => {
+  const onChangeStatus = async (
+    appointmentId: string,
+    next: AppointmentStatus,
+  ) => {
     try {
       await updateAppointmentByAdmin({
         variables: {
@@ -269,9 +283,14 @@ const AdminAppointmentsPage: NextPage = () => {
                 <Box className="admin-list__col admin-list__col--main">
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Avatar src={patientImage} sx={{ width: 42, height: 42 }} />
+                      <Avatar
+                        src={patientImage}
+                        sx={{ width: 42, height: 42 }}
+                      />
                       <Stack spacing={0.3}>
-                        <Typography className="admin-list__name">{patientName}</Typography>
+                        <Typography className="admin-list__name">
+                          {patientName}
+                        </Typography>
                         <Typography className="admin-list__meta">
                           Patient Phone: {patientPhone}
                         </Typography>
@@ -279,9 +298,14 @@ const AdminAppointmentsPage: NextPage = () => {
                     </Stack>
 
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Avatar src={doctorImage} sx={{ width: 42, height: 42 }} />
+                      <Avatar
+                        src={doctorImage}
+                        sx={{ width: 42, height: 42 }}
+                      />
                       <Stack spacing={0.3}>
-                        <Typography className="admin-list__name">{doctorName}</Typography>
+                        <Typography className="admin-list__name">
+                          {doctorName}
+                        </Typography>
                         <Typography className="admin-list__meta">
                           Doctor Phone: {doctorPhone}
                         </Typography>
@@ -297,8 +321,8 @@ const AdminAppointmentsPage: NextPage = () => {
                       )}
                     </Typography>
                     <Typography className="admin-list__meta">
-                      Consultation: {appointment.consultationType || "-"} | Payment:{" "}
-                      {appointment.paymentStatus || "-"}
+                      Consultation: {appointment.consultationType || "-"} |
+                      Payment: {appointment.paymentStatus || "-"}
                     </Typography>
                   </Stack>
                 </Box>

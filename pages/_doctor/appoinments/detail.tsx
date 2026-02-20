@@ -9,6 +9,7 @@ import { GET_DOCTOR_APPOINTMENTS } from "@/apollo/doctor/query";
 import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
 import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
 import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetDoctorAppointmentsResponse {
   getDoctorAppointments: Appointments;
@@ -61,7 +62,7 @@ const DoctorAppointmentDetail: NextPage = () => {
       page: 1,
       limit: 500,
       sort: "appointmentDate",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { doctorId },
     }),
     [doctorId],

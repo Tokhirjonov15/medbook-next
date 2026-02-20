@@ -18,6 +18,8 @@ import { GET_DOCTORS } from "@/apollo/user/query";
 import { Doctors } from "@/libs/types/doctors/doctor";
 import { DoctorsInquiry } from "@/libs/types/members/member.input";
 import { useDoctorQueryState } from "@/libs/hooks/useDoctorQueryState";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface DoctorListProps {
   initialInput: DoctorsInquiry;
@@ -33,6 +35,7 @@ interface GetDoctorsVariables {
 
 const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
   const { initialInput } = props;
+  const { t } = useMemberTranslation();
   const {
     queryInput,
     searchText,
@@ -86,14 +89,14 @@ const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
               value={searchText}
               type="text"
               className="search-input"
-              placeholder="Search by doctor name or specialization..."
+              placeholder={t("doctor.list.searchPlaceholder", "Search by doctor name or specialization...")}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 handleSearch(e.target.value)
               }
             />
           </Stack>
           <Box className="sort-box">
-            <span>Sort by:</span>
+            <span>{t("doctor.list.sortBy", "Sort by:")}</span>
             <div>
               <Button
                 endIcon={<KeyboardArrowDownRoundedIcon />}
@@ -109,19 +112,19 @@ const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
                   handleSort(sortOptions[nextIndex]);
                 }}
               >
-                {sortBy === "most_viewed" && "Most Viewed"}
-                {sortBy === "newest" && "Newest"}
-                {sortBy === "oldest" && "Oldest"}
-                {sortBy === "rating" && "Highest Rating"}
+                {sortBy === "most_viewed" && t("doctor.list.sort.mostViewed", "Most Viewed")}
+                {sortBy === "newest" && t("doctor.list.sort.newest", "Newest")}
+                {sortBy === "oldest" && t("doctor.list.sort.oldest", "Oldest")}
+                {sortBy === "rating" && t("doctor.list.sort.highestRating", "Highest Rating")}
               </Button>
             </div>
           </Box>
         </Box>
 
         <Stack className="result-count">
-          <Typography>{totalDoctors} doctors found</Typography>
+          <Typography>{totalDoctors} {t("doctor.list.found", "doctors found")}</Typography>
           <Typography className="subtitle">
-            Your health is our priority!!
+            {t("doctor.list.subtitle", "Your health is our priority!!")}
           </Typography>
         </Stack>
 
@@ -155,12 +158,12 @@ const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
                 </Stack>
               )}
               {getDoctorsError && (
-                <Typography>Failed to load doctors.</Typography>
+                <Typography>{t("doctor.list.loadError", "Failed to load doctors.")}</Typography>
               )}
               {!getDoctorsLoading &&
                 !getDoctorsError &&
                 doctors.length === 0 && (
-                  <Typography>No doctors found.</Typography>
+                  <Typography>{t("doctor.list.empty", "No doctors found.")}</Typography>
                 )}
               {!getDoctorsLoading &&
                 !getDoctorsError &&
@@ -184,7 +187,7 @@ const DoctorList: NextPage<DoctorListProps> = (props: DoctorListProps) => {
                 />
               </Stack>
               <Stack className="total-result">
-                <Typography>Total {totalDoctors} doctors available</Typography>
+                <Typography>{t("doctor.list.totalPrefix", "Total")} {totalDoctors} {t("doctor.list.totalSuffix", "doctors available")}</Typography>
               </Stack>
             </Stack>
           </Stack>
@@ -199,7 +202,7 @@ DoctorList.defaultProps = {
     page: 1,
     limit: 5,
     sort: "doctorViews",
-    direction: "DESC",
+    direction: Direction.DESC,
     search: {},
   },
 };

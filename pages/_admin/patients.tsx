@@ -33,6 +33,7 @@ import { Followers, Followings } from "@/libs/types/follow/follow";
 import { MemberStatus, MemberType } from "@/libs/enums/member.enum";
 import { userVar } from "@/apollo/store";
 import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetAllMembersByAdminResponse {
   getAllMembersByAdmin: Members;
@@ -109,7 +110,7 @@ const AdminPatientsPage: NextPage = () => {
           page: 1,
           limit: 100,
           sort: "createdAt",
-          direction: "DESC",
+          direction: Direction.DESC,
           search: { memberType: MemberType.PATIENT },
         },
       },

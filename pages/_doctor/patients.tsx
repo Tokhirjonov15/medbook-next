@@ -1,9 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Box, CircularProgress, OutlinedInput, Pagination, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  OutlinedInput,
+  Pagination,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import withLayoutDoctor from "@/libs/components/layout/LayoutDoctor";
-import PatientCard, { PatientCardData } from "@/libs/components/_doctorsHome/PatientCard";
+import PatientCard, {
+  PatientCardData,
+} from "@/libs/components/_doctorsHome/PatientCard";
 import { useApolloClient, useQuery, useReactiveVar } from "@apollo/client";
 import { doctorVar } from "@/apollo/store";
 import {
@@ -17,6 +26,7 @@ import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
 import { Member } from "@/libs/types/members/member";
 import { FollowInquiry } from "@/libs/types/follow/follow.input";
 import { Followers, Followings } from "@/libs/types/follow/follow";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetDoctorAppointmentsResponse {
   getDoctorAppointments: Appointments;
@@ -61,7 +71,8 @@ const toAbsoluteMediaUrl = (value?: string): string => {
   return src;
 };
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const DoctorPatients: NextPage = () => {
   const router = useRouter();
@@ -72,7 +83,9 @@ const DoctorPatients: NextPage = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [sortBy, setSortBy] = useState<"newest" | "latest">("newest");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [memberDetailsMap, setMemberDetailsMap] = useState<Record<string, Member>>({});
+  const [memberDetailsMap, setMemberDetailsMap] = useState<
+    Record<string, Member>
+  >({});
   const [followCountsMap, setFollowCountsMap] = useState<
     Record<string, { followers: number; followings: number }>
   >({});
@@ -83,7 +96,7 @@ const DoctorPatients: NextPage = () => {
       page: 1,
       limit: 1000,
       sort: "appointmentDate",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { doctorId },
     }),
     [doctorId],
@@ -136,7 +149,10 @@ const DoctorPatients: NextPage = () => {
       const detailEntries = await Promise.all(
         uniquePatientsBase.map(async ({ id }) => {
           try {
-            const { data } = await apolloClient.query<GetMemberResponse, GetMemberVariables>({
+            const { data } = await apolloClient.query<
+              GetMemberResponse,
+              GetMemberVariables
+            >({
               query: GET_MEMBER,
               variables: { input: id },
               fetchPolicy: "network-only",
@@ -179,9 +195,11 @@ const DoctorPatients: NextPage = () => {
               id,
               {
                 followers:
-                  followersRes.data?.getMemberFollowers?.metaCounter?.[0]?.total ?? 0,
+                  followersRes.data?.getMemberFollowers?.metaCounter?.[0]
+                    ?.total ?? 0,
                 followings:
-                  followingsRes.data?.getMemberFollowings?.metaCounter?.[0]?.total ?? 0,
+                  followingsRes.data?.getMemberFollowings?.metaCounter?.[0]
+                    ?.total ?? 0,
               },
             ] as const;
           } catch {
@@ -195,7 +213,10 @@ const DoctorPatients: NextPage = () => {
       detailEntries.forEach(([id, member]) => {
         if (member) nextMap[id] = member;
       });
-      const nextFollowCounts: Record<string, { followers: number; followings: number }> = {};
+      const nextFollowCounts: Record<
+        string,
+        { followers: number; followings: number }
+      > = {};
       followCountEntries.forEach(([id, counts]) => {
         nextFollowCounts[id] = counts;
       });
@@ -214,14 +235,26 @@ const DoctorPatients: NextPage = () => {
       const memberDetail = memberDetailsMap[id];
       return {
         id,
-        name: memberDetail?.memberNick || patientData?.memberNick || "Unknown Patient",
+        name:
+          memberDetail?.memberNick ||
+          patientData?.memberNick ||
+          "Unknown Patient",
         image:
-          toAbsoluteMediaUrl(memberDetail?.memberImage || patientData?.memberImage) ||
-          "/img/defaultUser.svg",
-        followers: followCountsMap[id]?.followers ?? memberDetail?.memberFollowers ?? 0,
-        followings: followCountsMap[id]?.followings ?? memberDetail?.memberFollowings ?? 0,
+          toAbsoluteMediaUrl(
+            memberDetail?.memberImage || patientData?.memberImage,
+          ) || "/img/defaultUser.svg",
+        followers:
+          followCountsMap[id]?.followers ?? memberDetail?.memberFollowers ?? 0,
+        followings:
+          followCountsMap[id]?.followings ??
+          memberDetail?.memberFollowings ??
+          0,
         likes: memberDetail?.memberLikes || 0,
-        createdAt: String(memberDetail?.createdAt || patientData?.createdAt || new Date().toISOString()),
+        createdAt: String(
+          memberDetail?.createdAt ||
+            patientData?.createdAt ||
+            new Date().toISOString(),
+        ),
       };
     });
   }, [uniquePatientsBase, memberDetailsMap, followCountsMap]);
@@ -261,7 +294,15 @@ const DoctorPatients: NextPage = () => {
 
   if (!doctorId || getDoctorAppointmentsLoading) {
     return (
-      <Stack sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: "70vh" }}>
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
         <CircularProgress size={"3rem"} />
       </Stack>
     );
@@ -288,7 +329,9 @@ const DoctorPatients: NextPage = () => {
         <select
           className="doctor-patients__sort"
           value={sortBy}
-          onChange={(event) => handleSort(event.target.value as "newest" | "latest")}
+          onChange={(event) =>
+            handleSort(event.target.value as "newest" | "latest")
+          }
         >
           <option value="newest">Newest (createdAt)</option>
           <option value="latest">Latest (createdAt)</option>
@@ -308,7 +351,9 @@ const DoctorPatients: NextPage = () => {
               <PatientCard
                 key={patient.id}
                 patient={patient}
-                onNameClick={(id) => router.push(`/_doctor/patients/detail?id=${id}`)}
+                onNameClick={(id) =>
+                  router.push(`/_doctor/patients/detail?id=${id}`)
+                }
               />
             ))}
         </Box>
@@ -316,7 +361,8 @@ const DoctorPatients: NextPage = () => {
         <Box className="doctor-patients__footer">
           <Typography className="doctor-patients__result-text">
             Showing {filteredPatients.length === 0 ? 0 : startIndex + 1} to{" "}
-            {Math.min(endIndex, filteredPatients.length)} of {filteredPatients.length} results
+            {Math.min(endIndex, filteredPatients.length)} of{" "}
+            {filteredPatients.length} results
           </Typography>
           <Pagination
             page={currentPage}

@@ -35,6 +35,8 @@ import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
 import { ConsultationType } from "@/libs/enums/consultation.enum";
 import { MemberType } from "@/libs/enums/member.enum";
 import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 type MyPageCategory =
   | "personalInformation"
@@ -166,6 +168,7 @@ const isFollowedByMe = (value: any): boolean => {
 
 const MyPage: NextPage = () => {
   const router = useRouter();
+  const { t } = useMemberTranslation();
   const user = useReactiveVar(userVar);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -253,7 +256,7 @@ const MyPage: NextPage = () => {
       page: 1,
       limit: 200,
       sort: "createdAt",
-      direction: "DESC" as BoardArticlesInquiry["direction"],
+      direction: Direction.DESC,
       search: {},
     }),
     [],
@@ -275,7 +278,7 @@ const MyPage: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "appointmentDate",
-      direction: "DESC" as AppointmentsInquiry["direction"],
+      direction: Direction.DESC,
       search: {},
     }),
     [],
@@ -521,7 +524,7 @@ const MyPage: NextPage = () => {
         getAppointmentsRefetch({ input: appointmentsInput }),
         getVisitedDoctorsRefetch({ input: visitedDoctorsInput }),
       ]);
-      await sweetTopSmallSuccessAlert("Profile updated", 900);
+      await sweetTopSmallSuccessAlert(t("mypage.profileUpdated", "Profile updated"), 900);
       setSelectedFileName("");
     } catch (err: any) {
       sweetErrorHandling(err).then();
@@ -557,7 +560,7 @@ const MyPage: NextPage = () => {
         getFollowingsRefetch({ input: followingsInput }),
         getMemberRefetch({ input: memberId }),
       ]);
-      await sweetTopSmallSuccessAlert("Success!", 800);
+      await sweetTopSmallSuccessAlert(t("common.success", "Success!"), 800);
     } catch (err: any) {
       sweetErrorHandling(err).then();
     }
@@ -597,9 +600,9 @@ const MyPage: NextPage = () => {
         )}
 
         <Box className="mypage-header">
-          <Typography className="mypage-title">My Page</Typography>
+          <Typography className="mypage-title">{t("mypage.title", "My Page")}</Typography>
           <Typography className="mypage-subtitle">
-            Manage your personal profile and activity.
+            {t("mypage.subtitle", "Manage your personal profile and activity.")}
           </Typography>
         </Box>
 
@@ -608,44 +611,44 @@ const MyPage: NextPage = () => {
             className={`mypage-tab ${category === "personalInformation" ? "active" : ""}`}
             onClick={() => updateCategory("personalInformation")}
           >
-            Personal Information
+            {t("mypage.tab.personalInformation", "Personal Information")}
           </button>
           <button
             className={`mypage-tab ${category === "followers" ? "active" : ""}`}
             onClick={() => updateCategory("followers")}
           >
-            Followers ({followersCount})
+            {t("mypage.tab.followers", "Followers")} ({followersCount})
           </button>
           <button
             className={`mypage-tab ${category === "followings" ? "active" : ""}`}
             onClick={() => updateCategory("followings")}
           >
-            Followings ({followingsCount})
+            {t("mypage.tab.followings", "Followings")} ({followingsCount})
           </button>
           <button
             className={`mypage-tab ${category === "myArticles" ? "active" : ""}`}
             onClick={() => updateCategory("myArticles")}
           >
-            My Articles ({myArticlesCount})
+            {t("mypage.tab.myArticles", "My Articles")} ({myArticlesCount})
           </button>
           <button
             className={`mypage-tab ${category === "myAppointments" ? "active" : ""}`}
             onClick={() => updateCategory("myAppointments")}
           >
-            My Appointments
+            {t("mypage.tab.myAppointments", "My Appointments")}
           </button>
           <button
             className={`mypage-tab ${category === "recentlyVisitedDoctor" ? "active" : ""}`}
             onClick={() => updateCategory("recentlyVisitedDoctor")}
           >
-            Recently Visited Doctor
+            {t("mypage.tab.recentlyVisitedDoctor", "Recently Visited Doctor")}
           </button>
         </Stack>
 
         <Box className="mypage-panel">
           {category === "personalInformation" && (
             <Box className="mypage-section">
-              <Typography className="mypage-section-title">Personal Information</Typography>
+              <Typography className="mypage-section-title">{t("mypage.tab.personalInformation", "Personal Information")}</Typography>
 
               <Stack direction="row" spacing={2.5} className="mypage-avatar-row">
                 <Avatar src={personalInfo.image} className="mypage-avatar" />
@@ -662,10 +665,10 @@ const MyPage: NextPage = () => {
                     className="mypage-upload-btn"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Upload Image
+                    {t("mypage.uploadImage", "Upload Image")}
                   </Button>
                   <Typography className="mypage-upload-hint">
-                    {selectedFileName || "No file selected"}
+                    {selectedFileName || t("mypage.noFileSelected", "No file selected")}
                   </Typography>
                 </Box>
               </Stack>
@@ -673,7 +676,7 @@ const MyPage: NextPage = () => {
               <Stack spacing={2} className="mypage-form">
                 <TextField
                   fullWidth
-                  label="Username"
+                  label={t("mypage.username", "Username")}
                   value={personalInfo.username}
                   onChange={(event) =>
                     setPersonalInfo((prev) => ({ ...prev, username: event.target.value }))
@@ -681,7 +684,7 @@ const MyPage: NextPage = () => {
                 />
                 <TextField
                   fullWidth
-                  label="Phone Number"
+                  label={t("mypage.phoneNumber", "Phone Number")}
                   value={personalInfo.phone}
                   onChange={(event) =>
                     setPersonalInfo((prev) => ({ ...prev, phone: event.target.value }))
@@ -696,7 +699,7 @@ const MyPage: NextPage = () => {
                   disabled={!hasPersonalChanges || updateMemberLoading}
                   onClick={handleSaveChanges}
                 >
-                  Save Changes
+                  {t("mypage.saveChanges", "Save Changes")}
                 </Button>
               </Box>
             </Box>
@@ -705,7 +708,7 @@ const MyPage: NextPage = () => {
           {category === "followers" && (
             <Box className="mypage-section">
               <Typography className="mypage-section-title">
-                Followers ({followersCount})
+                {t("mypage.tab.followers", "Followers")} ({followersCount})
               </Typography>
               {getFollowersLoading ? (
                 <Stack sx={{ py: 2, alignItems: "center" }}>
@@ -714,7 +717,7 @@ const MyPage: NextPage = () => {
               ) : (
                 <Stack spacing={1.2}>
                   {followers.length === 0 ? (
-                    <Typography className="mypage-list-subtitle">No followers yet.</Typography>
+                    <Typography className="mypage-list-subtitle">{t("mypage.noFollowersYet", "No followers yet.")}</Typography>
                   ) : (
                     followers.map((item) => (
                       <Box key={item.id} className="mypage-list-item">
@@ -728,7 +731,7 @@ const MyPage: NextPage = () => {
                           }
                           sx={{ marginLeft: "auto", minWidth: "92px" }}
                         >
-                          {item.followedByMe ? "Following" : "Follow"}
+                          {item.followedByMe ? t("doctor.detail.following", "Following") : t("doctor.detail.follow", "Follow")}
                         </Button>
                       </Box>
                     ))
@@ -741,7 +744,7 @@ const MyPage: NextPage = () => {
           {category === "followings" && (
             <Box className="mypage-section">
               <Typography className="mypage-section-title">
-                Followings ({followingsCount})
+                {t("mypage.tab.followings", "Followings")} ({followingsCount})
               </Typography>
               {getFollowingsLoading ? (
                 <Stack sx={{ py: 2, alignItems: "center" }}>
@@ -750,7 +753,7 @@ const MyPage: NextPage = () => {
               ) : (
                 <Stack spacing={1.2}>
                   {followings.length === 0 ? (
-                    <Typography className="mypage-list-subtitle">No followings yet.</Typography>
+                    <Typography className="mypage-list-subtitle">{t("mypage.noFollowingsYet", "No followings yet.")}</Typography>
                   ) : (
                     followings.map((item) => (
                       <Box key={item.id} className="mypage-list-item">
@@ -765,7 +768,7 @@ const MyPage: NextPage = () => {
                           }
                           sx={{ marginLeft: "auto", minWidth: "92px" }}
                         >
-                          Unfollow
+                          {t("doctor.detail.unfollow", "Unfollow")}
                         </Button>
                       </Box>
                     ))
@@ -777,7 +780,7 @@ const MyPage: NextPage = () => {
 
           {category === "myArticles" && (
             <Box className="mypage-section">
-              <Typography className="mypage-section-title">My Articles</Typography>
+              <Typography className="mypage-section-title">{t("mypage.tab.myArticles", "My Articles")}</Typography>
               {getArticlesLoading ? (
                 <Stack sx={{ py: 2, alignItems: "center" }}>
                   <CircularProgress size={"2rem"} />
@@ -785,7 +788,7 @@ const MyPage: NextPage = () => {
               ) : (
                 <Stack spacing={1.2}>
                   {myArticles.length === 0 ? (
-                    <Typography className="mypage-list-subtitle">No articles yet.</Typography>
+                    <Typography className="mypage-list-subtitle">{t("mypage.noArticlesYet", "No articles yet.")}</Typography>
                   ) : (
                     myArticles.map((article) => (
                       <Box
@@ -804,9 +807,9 @@ const MyPage: NextPage = () => {
 
           {category === "myAppointments" && (
             <Box className="mypage-section">
-              <Typography className="mypage-section-title">My Appointments</Typography>
+              <Typography className="mypage-section-title">{t("mypage.tab.myAppointments", "My Appointments")}</Typography>
               <Typography className="mypage-list-subtitle">
-                Manage your upcoming visits and history.
+                {t("mypage.appointments.subtitle", "Manage your upcoming visits and history.")}
               </Typography>
 
               <Stack direction="row" className="mypage-appointments-tabs">
@@ -814,19 +817,19 @@ const MyPage: NextPage = () => {
                   className={`mypage-appointments-tab ${appointmentTab === "upcoming" ? "active" : ""}`}
                   onClick={() => setAppointmentTab("upcoming")}
                 >
-                  Upcoming
+                  {t("mypage.appointments.upcoming", "Upcoming")}
                 </button>
                 <button
                   className={`mypage-appointments-tab ${appointmentTab === "past" ? "active" : ""}`}
                   onClick={() => setAppointmentTab("past")}
                 >
-                  Past
+                  {t("mypage.appointments.past", "Past")}
                 </button>
                 <button
                   className={`mypage-appointments-tab ${appointmentTab === "cancelled" ? "active" : ""}`}
                   onClick={() => setAppointmentTab("cancelled")}
                 >
-                  Cancelled
+                  {t("mypage.appointments.cancelled", "Cancelled")}
                 </button>
               </Stack>
 
@@ -837,10 +840,10 @@ const MyPage: NextPage = () => {
               ) : filteredAppointments.length === 0 ? (
                 <Box className="mypage-empty-appointments">
                   <Typography className="mypage-empty-title">
-                    No appointments found
+                    {t("mypage.appointments.noAppointments", "No appointments found")}
                   </Typography>
                   <Typography className="mypage-empty-subtitle">
-                    You don't have any appointments in this category yet.
+                    {t("mypage.appointments.noAppointmentsSubtitle", "You don't have any appointments in this category yet.")}
                   </Typography>
                 </Box>
               ) : (
@@ -893,7 +896,7 @@ const MyPage: NextPage = () => {
                             router.push(`/mypage/appointments/detail?id=${appointment.id}`)
                           }
                         >
-                          View Details
+                          {t("mypage.appointments.viewDetails", "View Details")}
                         </Button>
                       </Stack>
                     </Box>
@@ -905,7 +908,7 @@ const MyPage: NextPage = () => {
 
           {category === "recentlyVisitedDoctor" && (
             <Box className="mypage-section">
-              <Typography className="mypage-section-title">Recently Visited Doctor</Typography>
+              <Typography className="mypage-section-title">{t("mypage.tab.recentlyVisitedDoctor", "Recently Visited Doctor")}</Typography>
               {getVisitedDoctorsLoading ? (
                 <Stack sx={{ py: 2, alignItems: "center" }}>
                   <CircularProgress size={"2rem"} />
@@ -913,7 +916,7 @@ const MyPage: NextPage = () => {
               ) : (
                 <Stack spacing={1.2}>
                   {recentlyVisitedDoctors.length === 0 ? (
-                    <Typography className="mypage-list-subtitle">No recent doctor visits yet.</Typography>
+                    <Typography className="mypage-list-subtitle">{t("mypage.noRecentDoctors", "No recent doctor visits yet.")}</Typography>
                   ) : (
                     recentlyVisitedDoctors.map((doctor) => (
                       <Box

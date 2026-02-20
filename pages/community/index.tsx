@@ -21,6 +21,8 @@ import { BoardArticleCategory } from "@/libs/enums/board-article.enum";
 import { userVar } from "@/apollo/store";
 import { sweetErrorHandling, sweetMixinErrorAlert, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface CommunityListProps {
   initialInput: BoardArticlesInquiry;
@@ -85,6 +87,7 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
   const { initialInput } = props;
   const router = useRouter();
   const user = useReactiveVar(userVar);
+  const { t } = useMemberTranslation();
 
   const [selectedCategory, setSelectedCategory] = useState<CategoryUi>("All");
   const [currentPage, setCurrentPage] = useState<number>(initialInput.page);
@@ -185,9 +188,9 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
     >
       <Stack className="container">
         <Stack className="result-count">
-          <Typography>{totalArticles} articles found</Typography>
+          <Typography>{totalArticles} {t("community.list.articlesFound", "articles found")}</Typography>
           <Typography className="subtitle">
-            Share your knowledge and connect with the community
+            {t("community.list.subtitle", "Share your knowledge and connect with the community")}
           </Typography>
         </Stack>
 
@@ -206,7 +209,7 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
                 onClick={handleCreateArticle}
                 className="write-btn"
               >
-                Write Article
+                {t("community.list.writeArticle", "Write Article")}
               </Button>
             </Stack>
 
@@ -240,12 +243,12 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
                 </Stack>
               )}
               {getBoardArticlesError && (
-                <Typography>Failed to load community articles.</Typography>
+                <Typography>{t("community.list.loadError", "Failed to load community articles.")}</Typography>
               )}
               {!getBoardArticlesLoading &&
                 !getBoardArticlesError &&
                 articles.length === 0 && (
-                  <Typography>No articles found.</Typography>
+                  <Typography>{t("community.list.empty", "No articles found.")}</Typography>
                 )}
               {!getBoardArticlesLoading &&
                 !getBoardArticlesError &&
@@ -265,7 +268,7 @@ const CommunityList: NextPage<CommunityListProps> = (props: CommunityListProps) 
                 />
               </Stack>
               <Stack className="total-result">
-                <Typography>Total {totalArticles} articles available</Typography>
+                <Typography>{t("community.list.totalPrefix", "Total")} {totalArticles} {t("community.list.totalSuffix", "articles available")}</Typography>
               </Stack>
             </Stack>
           </Stack>
@@ -280,7 +283,7 @@ CommunityList.defaultProps = {
     page: 1,
     limit: 6,
     sort: "createdAt",
-    direction: "DESC" as unknown as BoardArticlesInquiry["direction"],
+    direction: Direction.DESC,
     search: {},
   },
 };

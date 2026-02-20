@@ -834,5 +834,107 @@
         color: #e2e8f0 !important;
       }
     }
+
+    #doctor-detail-page {
+      .detail-content {
+        background: #111827 !important;
+        border: 1px solid #334155 !important;
+      }
+
+      .stats-section {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+      }
+
+      .write-review-section {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+      }
+
+      .review-input .MuiOutlinedInput-root,
+      .reply-input .MuiOutlinedInput-root {
+        background: #111827 !important;
+        border-color: #334155 !important;
+      }
+
+      .reviews-list {
+        .comment-item {
+          background: #0f172a !important;
+          border: 1px solid #334155 !important;
+        }
+
+        .replies-list .reply-item {
+          background: #111827 !important;
+          border-color: #334155 !important;
+        }
+      }
+    }
+
+    #payment-page {
+      .payment-modal {
+        background: #111827 !important;
+        border: 1px solid #334155 !important;
+      }
+
+      .modal-header,
+      .stepper-section,
+      .modal-actions {
+        background: #111827 !important;
+        border-color: #334155 !important;
+      }
+
+      .date-picker {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+      }
+
+      .MuiPickersLayout-root,
+      .MuiPickersCalendarHeader-root,
+      .MuiDayCalendar-header,
+      .MuiPickersDay-root {
+        color: #e2e8f0 !important;
+      }
+
+      .MuiPickersDay-root {
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: #cbd5e1 !important;
+
+        &:hover {
+          background: #1f2937 !important;
+        }
+
+        &.Mui-selected {
+          background: #2563eb !important;
+          color: #ffffff !important;
+        }
+
+        &.Mui-disabled {
+          color: #475569 !important;
+          opacity: 0.45 !important;
+          background: #0b1220 !important;
+        }
+      }
+
+      .MuiPickersDay-root:not(.Mui-disabled):not(.Mui-selected) {
+        border-color: #334155 !important;
+      }
+
+      .card-details {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+
+        .card-input .MuiOutlinedInput-root {
+          background: #111827 !important;
+          border-color: #334155 !important;
+          color: #e2e8f0 !important;
+        }
+      }
+
+      .next-btn,
+      .confirm-btn {
+        border: 1px solid #1d4ed8 !important;
+      }
+    }
   }
 }

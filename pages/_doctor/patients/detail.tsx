@@ -45,6 +45,7 @@ import { CommentGroup } from "@/libs/enums/comment.enum";
 import { MemberType } from "@/libs/enums/member.enum";
 import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetMemberResponse {
   getMember: Member;
@@ -144,7 +145,7 @@ const DoctorPatientDetail: NextPage = () => {
       page: 1,
       limit: 200,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {},
     }),
     [],
@@ -166,7 +167,7 @@ const DoctorPatientDetail: NextPage = () => {
       page: 1,
       limit: 50,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { commentRefId: patientId },
     }),
     [patientId],

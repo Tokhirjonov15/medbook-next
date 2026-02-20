@@ -35,12 +35,34 @@ function getHeaders() {
 
 const tokenRefreshLink = new TokenRefreshLink({
   accessTokenField: "accessToken",
+
   isTokenValidOrUndefined: () => {
-    return true;
-  }, // @ts-ignore
+    const token = getJwtToken();
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return Date.now() < payload.exp * 1000;
+    } catch {
+      return false;
+    }
+  },
+
   fetchAccessToken: () => {
-    // execute refresh token
-    return null;
+    return fetch(`${GRAPHQL_HTTP_URI}/refresh-token`, {
+      method: "POST",
+      credentials: "include",
+    });
+  },
+
+  handleFetch: (accessToken: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accessToken", accessToken);
+    }
+  },
+
+  handleError: (err: any) => {
+    console.warn("Refresh token invalid", err);
   },
 });
 
@@ -48,6 +70,7 @@ function createIsomorphicLink() {
   // @ts-ignore
   const uploadLink = createUploadLink({
     uri: GRAPHQL_HTTP_URI,
+    credentials: "include",
   });
 
   if (typeof window !== "undefined") {

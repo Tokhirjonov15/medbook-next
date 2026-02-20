@@ -34,6 +34,8 @@ import { CommentGroup } from "@/libs/enums/comment.enum";
 import { BoardArticleCategory } from "@/libs/enums/board-article.enum";
 import { userVar } from "@/apollo/store";
 import { sweetErrorHandling, sweetMixinErrorAlert, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 const ToastViewerComponent = dynamic(() => import("@/libs/components/community/TViewer"), { ssr: false });
 
@@ -129,6 +131,7 @@ const normalizeMarkdownForView = (value: string): string =>
 const CommunityDetail: NextPage = () => {
   const router = useRouter();
   const user = useReactiveVar(userVar);
+  const { t } = useMemberTranslation();
   const articleId = useMemo(() => {
     const raw = router.query.id;
     return Array.isArray(raw) ? raw[0] : raw;
@@ -155,7 +158,7 @@ const CommunityDetail: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {
         commentRefId: articleId || "",
       },
@@ -188,7 +191,7 @@ const CommunityDetail: NextPage = () => {
     try {
       if (!articleId) return;
       if (!user?._id) {
-        await sweetMixinErrorAlert("Please login first");
+        await sweetMixinErrorAlert(t("home.alert.loginFirst", "Please login first"));
         return;
       }
 
@@ -196,7 +199,7 @@ const CommunityDetail: NextPage = () => {
         variables: { input: articleId },
       });
       await getArticleRefetch();
-      await sweetTopSmallSuccessAlert("Success!", 800);
+      await sweetTopSmallSuccessAlert(t("common.success", "Success!"), 800);
     } catch (err: any) {
       sweetErrorHandling(err).then();
     }
@@ -206,7 +209,7 @@ const CommunityDetail: NextPage = () => {
     try {
       if (!articleId) return;
       if (!user?._id) {
-        await sweetMixinErrorAlert("Please login first");
+        await sweetMixinErrorAlert(t("home.alert.loginFirst", "Please login first"));
         return;
       }
       if (!commentText.trim()) return;
@@ -225,7 +228,7 @@ const CommunityDetail: NextPage = () => {
         getCommentsRefetch({ input: commentsInput }),
         getArticleRefetch(),
       ]);
-      await sweetTopSmallSuccessAlert("Comment posted", 800);
+      await sweetTopSmallSuccessAlert(t("community.detail.commentPosted", "Comment posted"), 800);
     } catch (err: any) {
       sweetErrorHandling(err).then();
     }
@@ -242,7 +245,7 @@ const CommunityDetail: NextPage = () => {
     try {
       if (!articleId || !commentId) return;
       if (!user?._id) {
-        await sweetMixinErrorAlert("Please login first");
+        await sweetMixinErrorAlert(t("home.alert.loginFirst", "Please login first"));
         return;
       }
       const reply = (replyTextMap[commentId] || "").trim();
@@ -265,7 +268,7 @@ const CommunityDetail: NextPage = () => {
         getCommentsRefetch({ input: commentsInput }),
         getArticleRefetch(),
       ]);
-      await sweetTopSmallSuccessAlert("Reply posted", 800);
+      await sweetTopSmallSuccessAlert(t("community.detail.replyPosted", "Reply posted"), 800);
     } catch (err: any) {
       sweetErrorHandling(err).then();
     }
@@ -275,13 +278,13 @@ const CommunityDetail: NextPage = () => {
     try {
       if (!commentId) return;
       if (!user?._id) {
-        await sweetMixinErrorAlert("Please login first");
+        await sweetMixinErrorAlert(t("home.alert.loginFirst", "Please login first"));
         return;
       }
 
       await likeTargetComment({ variables: { input: commentId } });
       await getCommentsRefetch({ input: commentsInput });
-      await sweetTopSmallSuccessAlert("Success!", 800);
+      await sweetTopSmallSuccessAlert(t("common.success", "Success!"), 800);
     } catch (err: any) {
       sweetErrorHandling(err).then();
     }
@@ -298,7 +301,7 @@ const CommunityDetail: NextPage = () => {
   if (getArticleError || !article) {
     return (
       <Stack sx={{ width: "100%", minHeight: "60vh", justifyContent: "center", alignItems: "center" }}>
-        <Typography>Failed to load article details.</Typography>
+        <Typography>{t("community.detail.loadError", "Failed to load article details.")}</Typography>
       </Stack>
     );
   }
@@ -378,14 +381,14 @@ const CommunityDetail: NextPage = () => {
 
           <Stack className="comments-section">
             <Typography className="section-title">
-              Comments ({article.articleComments || comments.length})
+              {t("community.detail.comments", "Comments")} ({article.articleComments || comments.length})
             </Typography>
 
             <Stack className="comments-list">
               {getCommentsLoading && <CircularProgress size={"1.5rem"} />}
-              {getCommentsError && <Typography>Failed to load comments.</Typography>}
+              {getCommentsError && <Typography>{t("community.detail.commentsLoadError", "Failed to load comments.")}</Typography>}
               {!getCommentsLoading && !getCommentsError && comments.length === 0 && (
-                <Typography>No comments yet.</Typography>
+                <Typography>{t("community.detail.noComments", "No comments yet.")}</Typography>
               )}
 
               {!getCommentsLoading && !getCommentsError && comments.map((comment) => (
@@ -421,7 +424,7 @@ const CommunityDetail: NextPage = () => {
                       className="comment-action-btn"
                       onClick={() => toggleReplyBox(comment._id)}
                     >
-                      Reply
+                      {t("community.detail.reply", "Reply")}
                     </Button>
                   </Stack>
 
@@ -432,7 +435,7 @@ const CommunityDetail: NextPage = () => {
                         multiline
                         rows={2}
                         fullWidth
-                        placeholder="Write a reply..."
+                        placeholder={t("community.detail.writeReply", "Write a reply...")}
                         value={replyTextMap[comment._id] || ""}
                         onChange={(e) =>
                           setReplyTextMap((prev) => ({
@@ -450,7 +453,7 @@ const CommunityDetail: NextPage = () => {
                         disabled={!replyTextMap[comment._id]?.trim()}
                         className="submit-reply-btn"
                       >
-                        Reply
+                        {t("community.detail.reply", "Reply")}
                       </Button>
                     </Stack>
                   )}
@@ -499,7 +502,7 @@ const CommunityDetail: NextPage = () => {
                 multiline
                 rows={3}
                 fullWidth
-                placeholder="Write a comment..."
+                placeholder={t("community.detail.writeComment", "Write a comment...")}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 className="comment-input"
@@ -513,7 +516,7 @@ const CommunityDetail: NextPage = () => {
                 disabled={!commentText.trim()}
                 className="submit-comment-btn"
               >
-                Post Comment
+                {t("community.detail.postComment", "Post Comment")}
               </Button>
             </Stack>
           </Stack>

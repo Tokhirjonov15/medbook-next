@@ -45,8 +45,8 @@ import {
   sweetMixinSuccessAlert,
 } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
-
-const steps = ["Date & Time", "Details", "Payment"];
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface GetDoctorResponse {
   getDoctor: Doctor;
@@ -88,6 +88,21 @@ const dayToIndex: Record<string, number> = {
   [DayOfWeek.THURSDAY]: 4,
   [DayOfWeek.FRIDAY]: 5,
   [DayOfWeek.SATURDAY]: 6,
+};
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  "http://localhost:3004";
+
+const toAbsoluteMediaUrl = (value?: string): string => {
+  const src = String(value || "").trim();
+  if (!src) return "";
+  if (/^https?:\/\//i.test(src)) return src;
+  if (src.startsWith("/img/")) return src;
+  if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
+  return src;
 };
 
 const parseTimeToMinutes = (value: string): number | null => {
@@ -161,8 +176,21 @@ const isSameDate = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
+const getMaxBookableDate = (): Date => {
+  const max = new Date();
+  max.setHours(23, 59, 59, 999);
+  max.setDate(max.getDate() + 20);
+  return max;
+};
+
 const PaymentPage: NextPage = () => {
   const router = useRouter();
+  const { t } = useMemberTranslation();
+  const steps = [
+    t("payment.step.dateTime", "Date & Time"),
+    t("payment.step.details", "Details"),
+    t("payment.step.payment", "Payment"),
+  ];
   const doctorId = useMemo(() => {
     const raw = router.query.id;
     return Array.isArray(raw) ? raw[0] : raw;
@@ -223,7 +251,7 @@ const PaymentPage: NextPage = () => {
       page: 1,
       limit: 200,
       sort: "createdAt",
-      direction: "DESC" as unknown as AppointmentsInquiry["direction"],
+      direction: Direction.DESC,
       search: {
         doctorId,
         dateFrom: dayStart,
@@ -264,6 +292,7 @@ const PaymentPage: NextPage = () => {
     () => baseSlots.filter((slot) => !occupiedSlotSet.has(slot)),
     [baseSlots, occupiedSlotSet],
   );
+  const maxBookableDate = useMemo(() => getMaxBookableDate(), []);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -292,18 +321,21 @@ const PaymentPage: NextPage = () => {
 
   const handleNext = async () => {
     try {
-      if (activeStep === 0 && !selectedDate) throw new Error("Please select a date");
+      if (activeStep === 0 && !selectedDate) throw new Error(t("payment.error.selectDate", "Please select a date"));
+      if (activeStep === 0 && selectedDate && selectedDate > maxBookableDate) {
+        throw new Error(t("payment.error.max20days", "You can book appointments up to 20 days from today."));
+      }
       if (activeStep === 0 && selectedDate && shouldDisableDate(selectedDate)) {
-        throw new Error("Selected day is not available for this doctor");
+        throw new Error(t("payment.error.dayNotAvailable", "Selected day is not available for this doctor"));
       }
       if (activeStep === 0 && getDoctorAppointmentsError) {
-        throw new Error("Unable to verify booked slots. Please try again.");
+        throw new Error(t("payment.error.slotVerify", "Unable to verify booked slots. Please try again."));
       }
-      if (activeStep === 0 && !selectedTime) throw new Error("Please select a time slot");
+      if (activeStep === 0 && !selectedTime) throw new Error(t("payment.error.selectSlot", "Please select a time slot"));
       if (activeStep === 0 && occupiedSlotSet.has(selectedTime)) {
-        throw new Error("This time slot is already booked. Please choose another slot.");
+        throw new Error(t("payment.error.slotBooked", "This time slot is already booked. Please choose another slot."));
       }
-      if (activeStep === 1 && !reason.trim()) throw new Error("Please provide a reason for visit");
+      if (activeStep === 1 && !reason.trim()) throw new Error(t("payment.error.reasonRequired", "Please provide a reason for visit"));
       setActiveStep((prevActiveStep) => prevActiveStep + 1);
     } catch (err: any) {
       sweetErrorHandling(err).then();
@@ -331,24 +363,27 @@ const PaymentPage: NextPage = () => {
     try {
       if (!doctorId) throw new Error(Messages.error1);
       if (!selectedDate || !selectedTime) throw new Error(Messages.error3);
+      if (selectedDate > maxBookableDate) {
+        throw new Error(t("payment.error.max20days", "You can book appointments up to 20 days from today."));
+      }
       if (selectedDate && shouldDisableDate(selectedDate)) {
-        throw new Error("Selected day is not available for this doctor");
+        throw new Error(t("payment.error.dayNotAvailable", "Selected day is not available for this doctor"));
       }
       if (occupiedSlotSet.has(selectedTime)) {
-        throw new Error("This time slot is already booked. Please choose another slot.");
+        throw new Error(t("payment.error.slotBooked", "This time slot is already booked. Please choose another slot."));
       }
       if (!reason.trim()) throw new Error(Messages.error3);
       if (paymentMethod === "credit" && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv)) {
-        throw new Error("Please fill in all card details");
+        throw new Error(t("payment.error.fillCard", "Please fill in all card details"));
       }
       if (paymentMethod === "credit" && cardDetails.number.length !== 16) {
-        throw new Error("Card number must be 16 digits");
+        throw new Error(t("payment.error.card16", "Card number must be 16 digits"));
       }
       if (paymentMethod === "credit" && cardDetails.expiry.length !== 4) {
-        throw new Error("Expiry must be 4 digits (MMYY)");
+        throw new Error(t("payment.error.expiry4", "Expiry must be 4 digits (MMYY)"));
       }
       if (paymentMethod === "credit" && cardDetails.cvv.length !== 3) {
-        throw new Error("CVC must be 3 digits");
+        throw new Error(t("payment.error.cvc3", "CVC must be 3 digits"));
       }
 
       const appointmentInput: BookAppointmentInput = {
@@ -378,16 +413,16 @@ const PaymentPage: NextPage = () => {
       await sweetMixinSuccessAlert("Appointment and payment created successfully");
       await Swal.fire({
         icon: "success",
-        title: "Booking Confirmed!",
+        title: t("payment.success.title", "Booking Confirmed!"),
         text: `Your appointment with ${doctorName} is set for ${selectedDate?.toLocaleDateString()} at ${selectedTime}`,
         showConfirmButton: true,
-        confirmButtonText: "Done",
+        confirmButtonText: t("common.done", "Done"),
       });
       await router.push("/mypage?category=myAppointments");
     } catch (err: any) {
       const msg = String(err?.message || "");
       if (msg.includes("BAD_REQUEST")) {
-        await sweetErrorHandling(new Error("This time slot is already booked. Please choose another slot."));
+        await sweetErrorHandling(new Error(t("payment.error.slotBooked", "This time slot is already booked. Please choose another slot.")));
         return;
       }
       console.log("ERROR, handleConfirmPayment:", err.message);
@@ -410,7 +445,7 @@ const PaymentPage: NextPage = () => {
   if (getDoctorError || !doctor) {
     return (
       <Stack sx={{ width: "100%", minHeight: "60vh", justifyContent: "center", alignItems: "center" }}>
-        <Typography>Failed to load doctor data.</Typography>
+        <Typography>{t("payment.error.loadDoctor", "Failed to load doctor data.")}</Typography>
       </Stack>
     );
   }
@@ -424,7 +459,7 @@ const PaymentPage: NextPage = () => {
   )
     .map((value) => String(value).replaceAll("_", " "))
     .join(", ");
-  const doctorImage = doctor.memberImage || "/img/defaultUser.svg";
+  const doctorImage = toAbsoluteMediaUrl(doctor.memberImage) || "/img/defaultUser.svg";
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -432,7 +467,7 @@ const PaymentPage: NextPage = () => {
         <Stack className="payment-container">
           <Stack className="payment-modal">
             <Stack className="modal-header">
-              <Typography className="modal-title">Book Appointment</Typography>
+              <Typography className="modal-title">{t("payment.title", "Book Appointment")}</Typography>
               <IconButton onClick={handleClose} className="close-btn">
                 <CloseIcon />
               </IconButton>
@@ -453,26 +488,29 @@ const PaymentPage: NextPage = () => {
             <Stack className="step-content">
               {activeStep === 0 && (
                 <Stack className="step-one">
-                  <Typography className="section-title">Select Date</Typography>
+                  <Typography className="section-title">{t("payment.section.selectDate", "Select Date")}</Typography>
                   <Box className="date-picker-box">
                     <StaticDatePicker
                       displayStaticWrapperAs="desktop"
                       value={selectedDate}
                       onChange={(newValue: Date | null) => setSelectedDate(newValue)}
+                      views={["year", "month", "day"]}
+                      openTo="day"
                       minDate={new Date()}
+                      maxDate={maxBookableDate}
                       shouldDisableDate={shouldDisableDate}
                       className="date-picker"
                     />
                   </Box>
 
-                  <Typography className="section-title">Available Slots</Typography>
+                  <Typography className="section-title">{t("payment.section.availableSlots", "Available Slots")}</Typography>
                   <Stack className="time-slots">
                     {getDoctorAppointmentsLoading && <CircularProgress size={"1.2rem"} />}
                     {availableSlots.length === 0 ? (
                       <Typography sx={{ color: "#6b7280" }}>
                         {baseSlots.length === 0
-                          ? "No available slots configured for this doctor."
-                          : "All slots are booked for this date. Please choose another day."}
+                          ? t("payment.noSlotsConfigured", "No available slots configured for this doctor.")
+                          : t("payment.allSlotsBooked", "All slots are booked for this date. Please choose another day.")}
                       </Typography>
                     ) : (
                       availableSlots.map((slot) => (
@@ -492,7 +530,7 @@ const PaymentPage: NextPage = () => {
 
               {activeStep === 1 && (
                 <Stack className="step-two">
-                  <Typography className="section-title">Consultation Type</Typography>
+                  <Typography className="section-title">{t("payment.section.consultationType", "Consultation Type")}</Typography>
                   <Stack className="consultation-types">
                     <Box
                       className={`consultation-card ${consultationType === ConsultationType.VIDEO ? "selected" : ""}`}
@@ -502,29 +540,29 @@ const PaymentPage: NextPage = () => {
                       }}
                     >
                       <VideocamIcon className="card-icon" />
-                      <Typography className="card-title">Video Call</Typography>
+                      <Typography className="card-title">{t("payment.type.video", "Video Call")}</Typography>
                     </Box>
                     <Box
                       className={`consultation-card ${consultationType === ConsultationType.CLINIC ? "selected" : ""}`}
                       onClick={() => setConsultationType(ConsultationType.CLINIC)}
                     >
                       <LocalHospitalIcon className="card-icon" />
-                      <Typography className="card-title">Clinic Visit</Typography>
+                      <Typography className="card-title">{t("payment.type.clinic", "Clinic Visit")}</Typography>
                     </Box>
                   </Stack>
 
-                  <Typography className="section-title">Reason for Visit</Typography>
+                  <Typography className="section-title">{t("payment.section.reason", "Reason for Visit")}</Typography>
                   <TextField
                     multiline
                     rows={4}
                     fullWidth
-                    placeholder="Briefly describe what you're experiencing..."
+                    placeholder={t("payment.reason.placeholder", "Briefly describe what you're experiencing...")}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     className="reason-input"
                   />
 
-                  <Typography className="section-title">Symptoms</Typography>
+                  <Typography className="section-title">{t("payment.section.symptoms", "Symptoms")}</Typography>
                   <Stack className="symptoms-section">
                     <Stack className="symptoms-chips">
                       {symptoms.map((symptom) => (
@@ -533,7 +571,7 @@ const PaymentPage: NextPage = () => {
                     </Stack>
                     <TextField
                       fullWidth
-                      placeholder="Type and press Enter"
+                      placeholder={t("payment.symptoms.placeholder", "Type and press Enter")}
                       value={symptomInput}
                       onChange={(e) => setSymptomInput(e.target.value)}
                       onKeyDown={handleAddSymptom}
@@ -547,12 +585,12 @@ const PaymentPage: NextPage = () => {
                 <Stack className="step-three">
                   <Stack className="payment-layout">
                     <Stack className="payment-left">
-                      <Typography className="section-title">Payment Method</Typography>
+                      <Typography className="section-title">{t("payment.section.method", "Payment Method")}</Typography>
                       <Stack className="payment-methods">
                         <Box className={`payment-method-card ${paymentMethod === "credit" ? "selected" : ""}`} onClick={() => setPaymentMethod("credit")}>
                           <Radio checked={paymentMethod === "credit"} className="payment-radio" />
                           <Stack className="payment-info">
-                            <Typography className="payment-title">Credit Card</Typography>
+                            <Typography className="payment-title">{t("payment.method.card", "Credit Card")}</Typography>
                             <Typography className="payment-subtitle">**** **** **** 4242</Typography>
                           </Stack>
                           <CreditCardIcon className="payment-icon" />
@@ -560,8 +598,8 @@ const PaymentPage: NextPage = () => {
                         <Box className={`payment-method-card ${paymentMethod === "property" ? "selected" : ""}`} onClick={() => setPaymentMethod("property")}>
                           <Radio checked={paymentMethod === "property"} className="payment-radio" />
                           <Stack className="payment-info">
-                            <Typography className="payment-title">Pay at the Clinic</Typography>
-                            <Typography className="payment-subtitle">Pay when you arrive</Typography>
+                            <Typography className="payment-title">{t("payment.method.cash", "Pay at the Clinic")}</Typography>
+                            <Typography className="payment-subtitle">{t("payment.method.cashSub", "Pay when you arrive")}</Typography>
                           </Stack>
                           <MoneyIcon className="payment-icon" />
                         </Box>
@@ -617,7 +655,7 @@ const PaymentPage: NextPage = () => {
 
                     <Stack className="payment-right">
                       <Stack className="summary-card">
-                        <Typography className="summary-title">SUMMARY</Typography>
+                        <Typography className="summary-title">{t("payment.summary.title", "SUMMARY")}</Typography>
                         <Stack className="doctor-summary">
                           <Box className="doctor-avatar">
                             <img src={doctorImage} alt={doctorName} />
@@ -629,22 +667,22 @@ const PaymentPage: NextPage = () => {
                         </Stack>
                         <Stack className="summary-details">
                           <Stack className="summary-row">
-                            <Typography className="summary-label">Date</Typography>
+                            <Typography className="summary-label">{t("payment.summary.date", "Date")}</Typography>
                             <Typography className="summary-value">{selectedDate?.toLocaleDateString()}</Typography>
                           </Stack>
                           <Stack className="summary-row">
-                            <Typography className="summary-label">Time</Typography>
+                            <Typography className="summary-label">{t("payment.summary.time", "Time")}</Typography>
                             <Typography className="summary-value">{selectedTime}</Typography>
                           </Stack>
                           <Stack className="summary-row">
-                            <Typography className="summary-label">Type</Typography>
+                            <Typography className="summary-label">{t("payment.summary.type", "Type")}</Typography>
                             <Typography className="summary-value">
-                              {consultationType === ConsultationType.CLINIC ? "Clinic Visit" : "Video Call"}
+                              {consultationType === ConsultationType.CLINIC ? t("payment.type.clinic", "Clinic Visit") : t("payment.type.video", "Video Call")}
                             </Typography>
                           </Stack>
                         </Stack>
                         <Stack className="summary-total">
-                          <Typography className="total-label">Total</Typography>
+                          <Typography className="total-label">{t("payment.summary.total", "Total")}</Typography>
                           <Typography className="total-amount">${doctor.consultationFee}.00</Typography>
                         </Stack>
                       </Stack>
@@ -657,17 +695,17 @@ const PaymentPage: NextPage = () => {
             <Stack className="modal-actions">
               {activeStep > 0 && (
                 <Button variant="outlined" onClick={handleBack} className="back-btn">
-                  Back
+                  {t("common.back", "Back")}
                 </Button>
               )}
               <Box sx={{ flex: 1 }} />
               {activeStep < steps.length - 1 ? (
                 <Button variant="contained" onClick={handleNext} className="next-btn">
-                  Next Step
+                  {t("common.nextStep", "Next Step")}
                 </Button>
               ) : (
                 <Button variant="contained" onClick={handleConfirmPayment} className="confirm-btn">
-                  Confirm & Pay
+                  {t("payment.confirmAndPay", "Confirm & Pay")}
                 </Button>
               )}
             </Stack>

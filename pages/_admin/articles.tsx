@@ -22,7 +22,11 @@ import {
 import { BoardArticles } from "@/libs/types/board-article/board-article";
 import { AllBoardArticlesInquiry } from "@/libs/types/board-article/board-article.input";
 import { BoardArticleUpdate } from "@/libs/types/board-article/board-article.update";
-import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import {
+  sweetErrorHandling,
+  sweetTopSmallSuccessAlert,
+} from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetAllBoardArticlesByAdminResponse {
   getAllBoardArticlesByAdmin: BoardArticles;
@@ -51,34 +55,37 @@ const AdminArticlesPage: NextPage = () => {
     data: getArticlesData,
     error: getArticlesError,
     refetch: getArticlesRefetch,
-  } = useQuery<GetAllBoardArticlesByAdminResponse, GetAllBoardArticlesByAdminVariables>(
-    GET_ALL_BOARD_ARTICLES_BY_ADMIN,
-    {
-      fetchPolicy: "cache-and-network",
-      variables: {
-        input: {
-          page: 1,
-          limit: 200,
-          sort: "createdAt",
-          direction: "DESC",
-          search: {},
-        },
+  } = useQuery<
+    GetAllBoardArticlesByAdminResponse,
+    GetAllBoardArticlesByAdminVariables
+  >(GET_ALL_BOARD_ARTICLES_BY_ADMIN, {
+    fetchPolicy: "cache-and-network",
+    variables: {
+      input: {
+        page: 1,
+        limit: 200,
+        sort: "createdAt",
+        direction: Direction.DESC,
+        search: {},
       },
-      notifyOnNetworkStatusChange: true,
     },
-  );
-  const [updateBoardArticleByAdmin, { loading: updateArticleLoading }] = useMutation<
-    UpdateBoardArticleByAdminResponse,
-    UpdateBoardArticleByAdminVariables
-  >(UPDATE_BOARD_ARTICLES_BY_ADMIN);
-  const [removeBoardArticleByAdmin, { loading: removeArticleLoading }] = useMutation(
-    REMOVE_BOARD_ARTICLES_BY_ADMIN,
-  );
+    notifyOnNetworkStatusChange: true,
+  });
+  const [updateBoardArticleByAdmin, { loading: updateArticleLoading }] =
+    useMutation<
+      UpdateBoardArticleByAdminResponse,
+      UpdateBoardArticleByAdminVariables
+    >(UPDATE_BOARD_ARTICLES_BY_ADMIN);
+  const [removeBoardArticleByAdmin, { loading: removeArticleLoading }] =
+    useMutation(REMOVE_BOARD_ARTICLES_BY_ADMIN);
 
   const articles = getArticlesData?.getAllBoardArticlesByAdmin?.list ?? [];
   const mutationLoading = updateArticleLoading || removeArticleLoading;
 
-  const onChangeStatus = async (articleId: string, next: BoardArticleStatus) => {
+  const onChangeStatus = async (
+    articleId: string,
+    next: BoardArticleStatus,
+  ) => {
     try {
       if (next === BoardArticleStatus.DELETE) {
         await removeBoardArticleByAdmin({ variables: { input: articleId } });
@@ -129,7 +136,14 @@ const AdminArticlesPage: NextPage = () => {
       )}
 
       {mutationLoading && !getArticlesLoading && (
-        <Stack sx={{ width: "100%", alignItems: "center", justifyContent: "center", py: 2 }}>
+        <Stack
+          sx={{
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            py: 2,
+          }}
+        >
           <CircularProgress size={"1.8rem"} />
         </Stack>
       )}
@@ -143,7 +157,9 @@ const AdminArticlesPage: NextPage = () => {
                   href={`/_admin/articles/detail?id=${article._id}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
-                  <Typography className="admin-list__name">{article.articleTitle}</Typography>
+                  <Typography className="admin-list__name">
+                    {article.articleTitle}
+                  </Typography>
                 </Link>
                 <Typography className="admin-list__meta">
                   By: {article.memberData?.memberNick || article.memberId} |{" "}
@@ -157,7 +173,10 @@ const AdminArticlesPage: NextPage = () => {
                   label="Status"
                   value={article.articleStatus}
                   onChange={(event) =>
-                    onChangeStatus(article._id, event.target.value as BoardArticleStatus)
+                    onChangeStatus(
+                      article._id,
+                      event.target.value as BoardArticleStatus,
+                    )
                   }
                 >
                   <MenuItem value={BoardArticleStatus.ACTIVE}>ACTIVE</MenuItem>

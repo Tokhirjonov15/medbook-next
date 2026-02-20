@@ -20,6 +20,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/router";
 import { useApolloClient, useMutation, useQuery, useReactiveVar } from "@apollo/client";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -63,6 +64,8 @@ import {
 } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
 import { MemberType } from "@/libs/enums/member.enum";
+import { Direction } from "@/libs/enums/common.enum";
+import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -179,6 +182,9 @@ function TabPanel(props: TabPanelProps) {
 
 export const DoctorDetailPage: NextPage = () => {
   const router = useRouter();
+  const { t } = useMemberTranslation();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const apolloClient = useApolloClient();
   const user = useReactiveVar(userVar);
   const doctorAuth = useReactiveVar(doctorVar);
@@ -245,7 +251,7 @@ export const DoctorDetailPage: NextPage = () => {
       page: 1,
       limit: 50,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {
         commentRefId: doctorId || "",
       },
@@ -622,7 +628,7 @@ export const DoctorDetailPage: NextPage = () => {
             page: 1,
             limit: 50,
             sort: "createdAt",
-            direction: "DESC",
+            direction: Direction.DESC,
             search: { commentRefId: parentId },
           },
         },
@@ -680,7 +686,7 @@ export const DoctorDetailPage: NextPage = () => {
   if (getDoctorError || !doctor) {
     return (
       <Stack sx={{ width: "100%", minHeight: "60vh", justifyContent: "center", alignItems: "center" }}>
-        <Typography>Failed to load doctor details.</Typography>
+        <Typography>{t("doctor.detail.loadError", "Failed to load doctor details.")}</Typography>
       </Stack>
     );
   }
@@ -716,13 +722,13 @@ export const DoctorDetailPage: NextPage = () => {
                   )}
                 </Stack>
                 <Typography className="specialization">
-                  {specialization} - {doctor.experience} Years Experience
+                  {specialization} - {doctor.experience} {t("doctor.detail.yearsExp", "Years Experience")}
                 </Typography>
                 <Stack className="like-section">
                   <IconButton onClick={likeDoctorHandler} className="like-btn">
                     {liked ? <FavoriteIcon className="liked" /> : <FavoriteBorderIcon />}
                   </IconButton>
-                  <Typography className="like-count">{likeCount} Likes</Typography>
+                  <Typography className="like-count">{likeCount} {t("doctor.detail.likes", "Likes")}</Typography>
                 </Stack>
               </Stack>
 
@@ -738,7 +744,7 @@ export const DoctorDetailPage: NextPage = () => {
                     onClick={followDoctorHandler}
                     className={followed ? "unfollow-btn" : "follow-btn"}
                   >
-                    {followed ? "Unfollow" : "Follow"}
+                    {followed ? t("doctor.detail.unfollow", "Unfollow") : t("doctor.detail.follow", "Follow")}
                   </Button>
                 ) : null}
               </Stack>
@@ -747,12 +753,12 @@ export const DoctorDetailPage: NextPage = () => {
             <Stack className="stats-section">
               <Stack className="stat-item" sx={{ cursor: "pointer" }} onClick={openFollowersModal}>
                 <Typography className="stat-number">{followerCount}</Typography>
-                <Typography className="stat-label">Followers</Typography>
+                <Typography className="stat-label">{t("doctor.detail.followers", "Followers")}</Typography>
               </Stack>
               <Stack className="stat-divider" />
               <Stack className="stat-item" sx={{ cursor: "pointer" }} onClick={openFollowingsModal}>
                 <Typography className="stat-number">{followingCount}</Typography>
-                <Typography className="stat-label">Following</Typography>
+                <Typography className="stat-label">{t("doctor.detail.following", "Following")}</Typography>
               </Stack>
             </Stack>
           </Stack>
@@ -764,9 +770,9 @@ export const DoctorDetailPage: NextPage = () => {
               className="doctor-tabs"
               TabIndicatorProps={{ className: "tab-indicator" }}
             >
-              <Tab label="About" className="tab-item" />
-              <Tab label="Reviews" className="tab-item" />
-              <Tab label="Availability" className="tab-item" />
+              <Tab label={t("doctor.detail.tab.about", "About")} className="tab-item" />
+              <Tab label={t("doctor.detail.tab.reviews", "Reviews")} className="tab-item" />
+              <Tab label={t("doctor.detail.tab.availability", "Availability")} className="tab-item" />
             </Tabs>
           </Box>
 
@@ -774,23 +780,23 @@ export const DoctorDetailPage: NextPage = () => {
             <TabPanel value={tabValue} index={0}>
               <Stack className="about-content">
                 <Stack className="section">
-                  <Typography className="section-title">Biography</Typography>
+                  <Typography className="section-title">{t("doctor.detail.biography", "Biography")}</Typography>
                   <Typography className="section-text">
-                    {doctor.memberDesc || "No biography provided."}
+                    {doctor.memberDesc || t("doctor.detail.noBiography", "No biography provided.")}
                   </Typography>
                 </Stack>
 
                 <Stack className="section">
-                  <Typography className="section-title">Specializations</Typography>
+                  <Typography className="section-title">{t("doctor.detail.specializations", "Specializations")}</Typography>
                   <Stack className="specializations-list">
                     <Chip label={specialization} className="spec-chip" />
                   </Stack>
                 </Stack>
 
                 <Stack className="section">
-                  <Typography className="section-title">Languages</Typography>
+                  <Typography className="section-title">{t("doctor.detail.languages", "Languages")}</Typography>
                   <Stack className="languages-list">
-                    {languages.length === 0 && <Typography>Not specified</Typography>}
+                    {languages.length === 0 && <Typography>{t("doctor.detail.notSpecified", "Not specified")}</Typography>}
                     {languages.map((lang, index) => (
                       <Stack key={`${lang}-${index}`} className="language-item">
                         <LanguageIcon className="lang-icon" />
@@ -801,10 +807,10 @@ export const DoctorDetailPage: NextPage = () => {
                 </Stack>
 
                 <Stack className="section">
-                  <Typography className="section-title">Clinic Location</Typography>
+                  <Typography className="section-title">{t("doctor.detail.clinicLocation", "Clinic Location")}</Typography>
                   <Typography className="section-text">
                     {doctor.clinicName ? `${doctor.clinicName}, ` : ""}
-                    {doctor.clinicAddress || "Not specified"}
+                    {doctor.clinicAddress || t("doctor.detail.notSpecified", "Not specified")}
                   </Typography>
                 </Stack>
               </Stack>
@@ -813,12 +819,12 @@ export const DoctorDetailPage: NextPage = () => {
             <TabPanel value={tabValue} index={1}>
               <Stack className="reviews-content">
                 <Stack className="write-review-section">
-                  <Typography className="section-title">Write a Review</Typography>
+                  <Typography className="section-title">{t("doctor.detail.writeReview", "Write a Review")}</Typography>
                   <TextField
                     multiline
                     rows={4}
                     fullWidth
-                    placeholder="Share your experience with this doctor..."
+                    placeholder={t("doctor.detail.reviewPlaceholder", "Share your experience with this doctor...")}
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     className="review-input"
@@ -829,18 +835,18 @@ export const DoctorDetailPage: NextPage = () => {
                     disabled={!reviewText.trim()}
                     className="submit-review-btn"
                   >
-                    Submit Review
+                    {t("doctor.detail.submitReview", "Submit Review")}
                   </Button>
                 </Stack>
 
                 <Stack className="reviews-list">
                   <Typography className="section-title">
-                    All Reviews ({totalReviewItems})
+                    {t("doctor.detail.allReviews", "All Reviews")} ({totalReviewItems})
                   </Typography>
                   {getCommentsLoading && <CircularProgress size={"1.5rem"} />}
-                  {getCommentsError && <Typography>Failed to load reviews.</Typography>}
+                  {getCommentsError && <Typography>{t("doctor.detail.reviewsLoadError", "Failed to load reviews.")}</Typography>}
                   {!getCommentsLoading && !getCommentsError && reviews.length === 0 && (
-                    <Typography>No reviews yet.</Typography>
+                    <Typography>{t("doctor.detail.noReviews", "No reviews yet.")}</Typography>
                   )}
                   {!getCommentsLoading &&
                     !getCommentsError &&
@@ -894,10 +900,10 @@ export const DoctorDetailPage: NextPage = () => {
                             />
                             <Stack direction="row" spacing={1}>
                               <Button size="small" variant="contained" onClick={saveEditComment}>
-                                Save
+                                {t("common.save", "Save")}
                               </Button>
                               <Button size="small" variant="outlined" onClick={cancelEditComment}>
-                                Cancel
+                                {t("common.cancel", "Cancel")}
                               </Button>
                             </Stack>
                           </Stack>
@@ -912,7 +918,7 @@ export const DoctorDetailPage: NextPage = () => {
                                   onClick={() => startEditComment(review)}
                                   className="comment-action-btn"
                                 >
-                                  Edit
+                                  {t("common.edit", "Edit")}
                                 </Button>
                               ) : (
                                 <Box />
@@ -937,7 +943,7 @@ export const DoctorDetailPage: NextPage = () => {
                                 className="comment-action-btn"
                                 onClick={() => toggleReplyBox(review._id)}
                               >
-                                Reply
+                                {t("doctor.detail.reply", "Reply")}
                               </Button>
                             </Stack>
                           </>
@@ -950,7 +956,7 @@ export const DoctorDetailPage: NextPage = () => {
                               multiline
                               rows={2}
                               fullWidth
-                              placeholder="Write a reply..."
+                              placeholder={t("doctor.detail.replyPlaceholder", "Write a reply...")}
                               value={replyTextMap[review._id] || ""}
                               onChange={(e) =>
                                 setReplyTextMap((prev) => ({
@@ -968,7 +974,7 @@ export const DoctorDetailPage: NextPage = () => {
                               disabled={!replyTextMap[review._id]?.trim()}
                               className="submit-reply-btn"
                             >
-                              Reply
+                              {t("doctor.detail.reply", "Reply")}
                             </Button>
                           </Stack>
                         )}
@@ -1057,8 +1063,8 @@ export const DoctorDetailPage: NextPage = () => {
             <TabPanel value={tabValue} index={2}>
               <Stack className="availability-content">
                 <Stack className="section">
-                  <Typography className="section-title">Availability By Day</Typography>
-                  {availabilityRows.length === 0 && <Typography>Not set</Typography>}
+                  <Typography className="section-title">{t("doctor.detail.availabilityByDay", "Availability By Day")}</Typography>
+                  {availabilityRows.length === 0 && <Typography>{t("doctor.detail.notSet", "Not set")}</Typography>}
                   {availabilityRows.length > 0 && (
                     <Stack spacing={1}>
                       <Stack
@@ -1071,11 +1077,11 @@ export const DoctorDetailPage: NextPage = () => {
                           fontWeight: 600,
                         }}
                       >
-                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Day</Typography>
-                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Work Start</Typography>
-                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Break Start</Typography>
-                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Break End</Typography>
-                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>Work End</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>{t("doctor.detail.day", "Day")}</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>{t("doctor.detail.workStart", "Work Start")}</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>{t("doctor.detail.breakStart", "Break Start")}</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>{t("doctor.detail.breakEnd", "Break End")}</Typography>
+                        <Typography component="span" sx={{ fontSize: "12px", fontWeight: 600 }}>{t("doctor.detail.workEnd", "Work End")}</Typography>
                       </Stack>
                       {availabilityRows.map((row) => (
                         <Stack
@@ -1112,7 +1118,7 @@ export const DoctorDetailPage: NextPage = () => {
                 className="book-btn"
                 onClick={() => router.push(`/payment?id=${doctor._id}`)}
               >
-                Book Appointment for ${doctor.consultationFee}
+                {t("doctor.detail.bookFor", "Book Appointment for")} ${doctor.consultationFee}
               </Button>
             </Stack>
           )}
@@ -1124,17 +1130,37 @@ export const DoctorDetailPage: NextPage = () => {
         onClose={() => setFollowersOpen(false)}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: isDark
+            ? {
+                backgroundColor: "#0f172a",
+                color: "#e2e8f0",
+                border: "1px solid #334155",
+              }
+            : undefined,
+        }}
       >
-        <DialogTitle>Followers</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={isDark ? { color: "#e2e8f0" } : undefined}>{t("doctor.detail.followers", "Followers")}</DialogTitle>
+        <DialogContent sx={isDark ? { color: "#cbd5e1" } : undefined}>
           {getFollowersLoading && <CircularProgress size={"1.5rem"} />}
-          {getFollowersError && <Typography>Failed to load followers.</Typography>}
+          {getFollowersError && <Typography>{t("doctor.detail.followersLoadError", "Failed to load followers.")}</Typography>}
           {!getFollowersLoading && !getFollowersError && followers.length === 0 && (
-            <Typography>No followers.</Typography>
+            <Typography>{t("doctor.detail.noFollowers", "No followers.")}</Typography>
           )}
           <List>
             {followers.map((item) => (
-              <ListItem key={item._id}>
+              <ListItem
+                key={item._id}
+                sx={
+                  isDark
+                    ? {
+                        borderRadius: "10px",
+                        backgroundColor: "#111827",
+                        mb: 1,
+                      }
+                    : undefined
+                }
+              >
                 <ListItemAvatar>
                   <Avatar
                     src={
@@ -1159,7 +1185,7 @@ export const DoctorDetailPage: NextPage = () => {
                       )
                     }
                   >
-                    {item.meFollowed?.myFollowing ? "Following" : "Follow"}
+                    {item.meFollowed?.myFollowing ? t("doctor.detail.following", "Following") : t("doctor.detail.follow", "Follow")}
                   </Button>
                 )}
               </ListItem>
@@ -1173,17 +1199,37 @@ export const DoctorDetailPage: NextPage = () => {
         onClose={() => setFollowingsOpen(false)}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: isDark
+            ? {
+                backgroundColor: "#0f172a",
+                color: "#e2e8f0",
+                border: "1px solid #334155",
+              }
+            : undefined,
+        }}
       >
-        <DialogTitle>Following</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={isDark ? { color: "#e2e8f0" } : undefined}>{t("doctor.detail.following", "Following")}</DialogTitle>
+        <DialogContent sx={isDark ? { color: "#cbd5e1" } : undefined}>
           {getFollowingsLoading && <CircularProgress size={"1.5rem"} />}
-          {getFollowingsError && <Typography>Failed to load following list.</Typography>}
+          {getFollowingsError && <Typography>{t("doctor.detail.followingsLoadError", "Failed to load following list.")}</Typography>}
           {!getFollowingsLoading && !getFollowingsError && followings.length === 0 && (
-            <Typography>No followings.</Typography>
+            <Typography>{t("doctor.detail.noFollowings", "No followings.")}</Typography>
           )}
           <List>
             {followings.map((item) => (
-              <ListItem key={item._id}>
+              <ListItem
+                key={item._id}
+                sx={
+                  isDark
+                    ? {
+                        borderRadius: "10px",
+                        backgroundColor: "#111827",
+                        mb: 1,
+                      }
+                    : undefined
+                }
+              >
                 <ListItemAvatar>
                   <Avatar
                     src={
@@ -1208,7 +1254,7 @@ export const DoctorDetailPage: NextPage = () => {
                       )
                     }
                   >
-                    {item.meFollowed?.myFollowing ? "Following" : "Follow"}
+                    {item.meFollowed?.myFollowing ? t("doctor.detail.following", "Following") : t("doctor.detail.follow", "Follow")}
                   </Button>
                 )}
               </ListItem>

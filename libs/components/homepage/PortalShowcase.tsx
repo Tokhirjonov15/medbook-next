@@ -266,7 +266,10 @@ const PortalShowcase = () => {
         <Box className="portal-canvas-box">
           <Canvas
             flat
-            camera={{ fov: 75, position: [0, 0, 3.2] }}
+            camera={{
+              fov: 75,
+              position: [0, 0, 3.2] as [number, number, number],
+            }}
             onPointerMissed={() => {
               // no-op: keeps canvas interactions smooth
             }}

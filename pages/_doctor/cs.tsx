@@ -21,6 +21,7 @@ import {
   defaultFaqs,
   getStoredCsPosts,
 } from "@/libs/configs/csContent";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,7 +53,7 @@ const DoctorCustomerService: NextPage = () => {
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: {},
     }),
     [],

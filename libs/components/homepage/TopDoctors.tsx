@@ -3,13 +3,12 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useRouter } from "next/router";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, type Swiper as SwiperType } from "swiper";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import useMemberTranslation from "@/libs/hooks/useMemberTranslation";
 import { useQuery } from "@apollo/client";
 import { GET_DOCTORS } from "@/apollo/user/query";
 import { Doctor } from "@/libs/types/doctors/doctor";
 import { DoctorsInquiry } from "@/libs/types/members/member.input";
-import { T } from "@/libs/types/common";
 
 interface TopDoctorsProps {
   initialInput?: DoctorsInquiry;
@@ -36,22 +35,17 @@ const TopRatedDoctors = ({
   const router = useRouter();
   const swiperRef = useRef<SwiperType | null>(null);
   const { t } = useMemberTranslation();
-  const [topDoctors, setTopDoctors] = useState<Doctor[]>([]);
  
   /** APOLLO */
   const {
-    loading: getDoctorsLoading,
     data: getDoctorsData,
-    error: getDoctorsError,
-    refetch: getDoctorsRefetch,
   } = useQuery(GET_DOCTORS, {
     fetchPolicy: "cache-and-network",
     variables: { input: initialInput },
     notifyOnNetworkStatusChange: true,
-    onCompleted: (data: T) => {
-      setTopDoctors(data?.getDoctors?.list);
-    },
   });
+
+  const topDoctors: Doctor[] = getDoctorsData?.getDoctors?.list ?? [];
 
   /** HANDLERS **/
 

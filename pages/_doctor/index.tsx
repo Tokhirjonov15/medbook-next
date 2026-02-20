@@ -30,15 +30,13 @@ import {
   GET_DOCTOR_APPOINTMENTS,
 } from "@/apollo/doctor/query";
 import { Doctor } from "@/libs/types/doctors/doctor";
-import {
-  Appointments,
-  Appointment,
-} from "@/libs/types/appoinment/appoinment";
+import { Appointments, Appointment } from "@/libs/types/appoinment/appoinment";
 import { AppointmentsInquiry } from "@/libs/types/appoinment/appoinment.input";
 import { Comments, Comment } from "@/libs/types/comment/comment";
 import { CommentsInquiry } from "@/libs/types/comment/comment.input";
 import { AppointmentStatus } from "@/libs/enums/appoinment.enum";
 import { CommentGroup } from "@/libs/enums/comment.enum";
+import { Direction } from "@/libs/enums/common.enum";
 
 interface GetDoctorResponse {
   getDoctor: Doctor;
@@ -82,7 +80,9 @@ const resolveMediaUrl = (value?: string) => {
 const toReadableStatus = (status?: string) =>
   (status || "").replaceAll("_", " ");
 
-const resolveAppointmentStatus = (appointment: Appointment): AppointmentStatus => {
+const resolveAppointmentStatus = (
+  appointment: Appointment,
+): AppointmentStatus => {
   const status = appointment.status;
   if (
     status === AppointmentStatus.COMPLETED ||
@@ -117,7 +117,7 @@ const DoctorDashboard: NextPage = () => {
       page: 1,
       limit: 5,
       sort: "appointmentDate",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { doctorId },
     }),
     [doctorId],
@@ -128,7 +128,7 @@ const DoctorDashboard: NextPage = () => {
       page: 1,
       limit: 200,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { doctorId },
     }),
     [doctorId],
@@ -139,19 +139,22 @@ const DoctorDashboard: NextPage = () => {
       page: 1,
       limit: 3,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { commentRefId: doctorId },
     }),
     [doctorId],
   );
 
-  const { loading: getDoctorLoading, data: getDoctorData, error: getDoctorError } =
-    useQuery<GetDoctorResponse, GetDoctorVariables>(GET_DOCTOR, {
-      fetchPolicy: "cache-and-network",
-      variables: { input: doctorId },
-      notifyOnNetworkStatusChange: true,
-      skip: !doctorId,
-    });
+  const {
+    loading: getDoctorLoading,
+    data: getDoctorData,
+    error: getDoctorError,
+  } = useQuery<GetDoctorResponse, GetDoctorVariables>(GET_DOCTOR, {
+    fetchPolicy: "cache-and-network",
+    variables: { input: doctorId },
+    notifyOnNetworkStatusChange: true,
+    skip: !doctorId,
+  });
 
   const {
     loading: getRecentAppointmentsLoading,
@@ -166,28 +169,35 @@ const DoctorDashboard: NextPage = () => {
     },
   );
 
-  const { loading: getStatsAppointmentsLoading, data: getStatsAppointmentsData } =
-    useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
-      GET_DOCTOR_APPOINTMENTS,
-      {
-        fetchPolicy: "cache-and-network",
-        variables: { input: statsAppointmentsInput },
-        notifyOnNetworkStatusChange: true,
-        skip: !doctorId,
-      },
-    );
-
-  const { loading: getReviewsLoading, data: getReviewsData, error: getReviewsError } =
-    useQuery<GetCommentsResponse, GetCommentsVariables>(GET_COMMENTS, {
+  const {
+    loading: getStatsAppointmentsLoading,
+    data: getStatsAppointmentsData,
+  } = useQuery<GetDoctorAppointmentsResponse, GetDoctorAppointmentsVariables>(
+    GET_DOCTOR_APPOINTMENTS,
+    {
       fetchPolicy: "cache-and-network",
-      variables: { input: commentsInput },
+      variables: { input: statsAppointmentsInput },
       notifyOnNetworkStatusChange: true,
       skip: !doctorId,
-    });
+    },
+  );
+
+  const {
+    loading: getReviewsLoading,
+    data: getReviewsData,
+    error: getReviewsError,
+  } = useQuery<GetCommentsResponse, GetCommentsVariables>(GET_COMMENTS, {
+    fetchPolicy: "cache-and-network",
+    variables: { input: commentsInput },
+    notifyOnNetworkStatusChange: true,
+    skip: !doctorId,
+  });
 
   const doctorData = getDoctorData?.getDoctor;
-  const recentAppointments = getRecentAppointmentsData?.getDoctorAppointments?.list ?? [];
-  const statAppointments = getStatsAppointmentsData?.getDoctorAppointments?.list ?? [];
+  const recentAppointments =
+    getRecentAppointmentsData?.getDoctorAppointments?.list ?? [];
+  const statAppointments =
+    getStatsAppointmentsData?.getDoctorAppointments?.list ?? [];
   const patientReviews = (getReviewsData?.getComments?.list ?? []).filter(
     (review: Comment) =>
       review.commentGroup === CommentGroup.DOCTOR && !review.parentCommentId,
@@ -218,7 +228,10 @@ const DoctorDashboard: NextPage = () => {
   const totalPatients = useMemo(() => {
     const ids = new Set(
       statAppointments
-        .map((appointment: Appointment) => appointment.patientData?._id || appointment.patient)
+        .map(
+          (appointment: Appointment) =>
+            appointment.patientData?._id || appointment.patient,
+        )
         .filter(Boolean),
     );
     return ids.size;
@@ -257,7 +270,11 @@ const DoctorDashboard: NextPage = () => {
     );
   }
 
-  if (getDoctorLoading || getRecentAppointmentsLoading || getStatsAppointmentsLoading) {
+  if (
+    getDoctorLoading ||
+    getRecentAppointmentsLoading ||
+    getStatsAppointmentsLoading
+  ) {
     return (
       <Stack
         sx={{
@@ -493,7 +510,8 @@ const DoctorDashboard: NextPage = () => {
                 </TableHead>
                 <TableBody>
                   {recentAppointments.map((appointment: Appointment) => {
-                    const effectiveStatus = resolveAppointmentStatus(appointment);
+                    const effectiveStatus =
+                      resolveAppointmentStatus(appointment);
                     const patientId =
                       appointment.patientData?._id || appointment.patient || "";
                     return (
@@ -506,7 +524,9 @@ const DoctorDashboard: NextPage = () => {
                             sx={{ cursor: patientId ? "pointer" : "default" }}
                             onClick={() =>
                               patientId
-                                ? router.push(`/_doctor/patients/detail?id=${patientId}`)
+                                ? router.push(
+                                    `/_doctor/patients/detail?id=${patientId}`,
+                                  )
                                 : null
                             }
                           >
@@ -517,20 +537,25 @@ const DoctorDashboard: NextPage = () => {
                             />
                             <Box>
                               <Typography variant="body2" fontWeight={600}>
-                                {appointment.patientData?.memberNick || "Unknown Patient"}
+                                {appointment.patientData?.memberNick ||
+                                  "Unknown Patient"}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
                               >
-                                #{appointment.patientData?._id?.slice(-6) || "N/A"}
+                                #
+                                {appointment.patientData?._id?.slice(-6) ||
+                                  "N/A"}
                               </Typography>
                             </Box>
                           </Stack>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {new Date(appointment.appointmentDate).toLocaleDateString()}
+                            {new Date(
+                              appointment.appointmentDate,
+                            ).toLocaleDateString()}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {appointment.timeSlot?.start || "-"}
@@ -569,7 +594,9 @@ const DoctorDashboard: NextPage = () => {
         {/* Patient Reviews */}
         <Card
           sx={{ flex: 1, cursor: "pointer" }}
-          onClick={() => router.push(`/_doctor/detail?id=${doctorId}&tab=reviews`)}
+          onClick={() =>
+            router.push(`/_doctor/detail?id=${doctorId}&tab=reviews`)
+          }
         >
           <CardContent>
             <Typography variant="h6" fontWeight={700} mb={2}>
@@ -587,48 +614,55 @@ const DoctorDashboard: NextPage = () => {
                   Failed to load reviews.
                 </Typography>
               )}
-              {!getReviewsLoading && !getReviewsError && patientReviews.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  No reviews yet.
-                </Typography>
-              )}
+              {!getReviewsLoading &&
+                !getReviewsError &&
+                patientReviews.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No reviews yet.
+                  </Typography>
+                )}
               {!getReviewsLoading &&
                 !getReviewsError &&
                 patientReviews.map((review: Comment) => (
-                <Box
-                  key={review._id}
-                  sx={{
-                    p: 2,
-                    backgroundColor: "#f8fafc",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Stack direction="row" spacing={1.5} mb={1}>
-                    <Avatar
-                      src={resolveMediaUrl(review.memberData?.memberImage)}
-                      sx={{ width: 36, height: 36 }}
-                    />
-                    <Box flex={1}>
-                      <Typography variant="body2" fontWeight={600}>
-                        {review.memberData?.memberNick || "Unknown User"}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontStyle: "italic" }}
+                  <Box
+                    key={review._id}
+                    sx={{
+                      p: 2,
+                      backgroundColor: "#f8fafc",
+                      borderRadius: 2,
+                    }}
                   >
-                    {review.commentContent}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-                    Likes: {review.commentLikes || 0}
-                  </Typography>
-                </Box>
-              ))}
+                    <Stack direction="row" spacing={1.5} mb={1}>
+                      <Avatar
+                        src={resolveMediaUrl(review.memberData?.memberImage)}
+                        sx={{ width: 36, height: 36 }}
+                      />
+                      <Box flex={1}>
+                        <Typography variant="body2" fontWeight={600}>
+                          {review.memberData?.memberNick || "Unknown User"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontStyle: "italic" }}
+                    >
+                      {review.commentContent}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      mt={1}
+                    >
+                      Likes: {review.commentLikes || 0}
+                    </Typography>
+                  </Box>
+                ))}
             </Stack>
           </CardContent>
         </Card>

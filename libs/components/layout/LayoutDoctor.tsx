@@ -78,6 +78,11 @@ const withLayoutDoctor = (Component: ComponentType) => {
       setAnchorElUser(null);
     };
 
+    const handleLogout = () => {
+      handleCloseUserMenu();
+      logOut();
+    };
+
     if (loading) return null;
 
     if (device === "mobile") {
@@ -135,7 +140,6 @@ const withLayoutDoctor = (Component: ComponentType) => {
                 >
                   <Box
                     component={"div"}
-                    onClick={handleCloseUserMenu}
                     sx={{
                       width: "200px",
                     }}
@@ -158,9 +162,9 @@ const withLayoutDoctor = (Component: ComponentType) => {
                     </Stack>
                     <Divider />
                     <Box component={"div"} sx={{ p: 1, py: "6px" }}>
-                      <MenuItem sx={{ px: "16px", py: "6px" }}>
+                      <MenuItem sx={{ px: "16px", py: "6px" }} onClick={handleLogout}>
                         <Typography variant={"subtitle1"} component={"span"}>
-                          <span onClick={() => logOut()}>Logout</span>
+                          Logout
                         </Typography>
                       </MenuItem>
                     </Box>
@@ -218,9 +222,9 @@ const withLayoutDoctor = (Component: ComponentType) => {
 
               <Box sx={{ mt: "auto", p: 2 }}>
                 <Divider sx={{ mb: 2 }} />
-                <MenuItem sx={{ borderRadius: 1, color: "#ef4444" }}>
+                <MenuItem sx={{ borderRadius: 1, color: "#ef4444" }} onClick={() => logOut()}>
                   <LogoutIcon />
-                  <Typography variant="body2" onClick={() => logOut()}>
+                  <Typography variant="body2">
                     Logout
                   </Typography>
                 </MenuItem>

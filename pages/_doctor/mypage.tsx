@@ -40,6 +40,7 @@ import { MemberType } from "@/libs/enums/member.enum";
 import { DayOfWeek } from "@/libs/enums/day-of-week.enum";
 import { Specialization } from "@/libs/enums/specialization.enum";
 import { sweetErrorHandling, sweetTopSmallSuccessAlert } from "@/libs/sweetAlert";
+import { Direction } from "@/libs/enums/common.enum";
 
 type MyPageTab =
   | "profile"
@@ -390,7 +391,7 @@ const DoctorMyPage: NextPage = () => {
       page: 1,
       limit: 200,
       sort: "createdAt",
-      direction: "DESC" as unknown as BoardArticlesInquiry["direction"],
+      direction: Direction.DESC,
       search: {},
     }),
     [],

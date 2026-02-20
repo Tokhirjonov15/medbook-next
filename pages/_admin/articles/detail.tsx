@@ -25,7 +25,10 @@ import SendIcon from "@mui/icons-material/Send";
 import ReplyIcon from "@mui/icons-material/Reply";
 import { useMutation, useQuery, useReactiveVar } from "@apollo/client";
 import withLayoutAdmin from "@/libs/components/layout/LayoutAdmin";
-import { BoardArticleCategory, BoardArticleStatus } from "@/libs/enums/board-article.enum";
+import {
+  BoardArticleCategory,
+  BoardArticleStatus,
+} from "@/libs/enums/board-article.enum";
 import { GET_ALL_BOARD_ARTICLES_BY_ADMIN } from "@/apollo/admin/query";
 import { GET_COMMENTS } from "@/apollo/user/query";
 import {
@@ -38,7 +41,10 @@ import { AllBoardArticlesInquiry } from "@/libs/types/board-article/board-articl
 import { BoardArticleUpdate } from "@/libs/types/board-article/board-article.update";
 import { CommentGroup } from "@/libs/enums/comment.enum";
 import { Comment, Comments } from "@/libs/types/comment/comment";
-import { CommentInput, CommentsInquiry } from "@/libs/types/comment/comment.input";
+import {
+  CommentInput,
+  CommentsInquiry,
+} from "@/libs/types/comment/comment.input";
 import { userVar } from "@/apollo/store";
 import {
   sweetErrorHandling,
@@ -49,10 +55,14 @@ import {
   REMOVE_BOARD_ARTICLES_BY_ADMIN,
   UPDATE_BOARD_ARTICLES_BY_ADMIN,
 } from "@/apollo/admin/mutation";
+import { Direction } from "@/libs/enums/common.enum";
 
-const ToastViewerComponent = dynamic(() => import("@/libs/components/community/TViewer"), {
-  ssr: false,
-});
+const ToastViewerComponent = dynamic(
+  () => import("@/libs/components/community/TViewer"),
+  {
+    ssr: false,
+  },
+);
 
 interface GetAllBoardArticlesByAdminResponse {
   getAllBoardArticlesByAdmin: BoardArticles;
@@ -149,38 +159,44 @@ const AdminArticleDetailPage: NextPage = () => {
     return Array.isArray(raw) ? raw[0] : raw;
   }, [router.query.id]);
   const [commentText, setCommentText] = React.useState("");
-  const [replyTextMap, setReplyTextMap] = React.useState<Record<string, string>>({});
-  const [showReplyBox, setShowReplyBox] = React.useState<Record<string, boolean>>({});
-  const [likedOverride, setLikedOverride] = React.useState<boolean | null>(null);
+  const [replyTextMap, setReplyTextMap] = React.useState<
+    Record<string, string>
+  >({});
+  const [showReplyBox, setShowReplyBox] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [likedOverride, setLikedOverride] = React.useState<boolean | null>(
+    null,
+  );
 
   const {
     loading: getArticlesLoading,
     data: getArticlesData,
     error: getArticlesError,
     refetch: getArticlesRefetch,
-  } = useQuery<GetAllBoardArticlesByAdminResponse, GetAllBoardArticlesByAdminVariables>(
-    GET_ALL_BOARD_ARTICLES_BY_ADMIN,
-    {
-      fetchPolicy: "cache-and-network",
-      variables: {
-        input: {
-          page: 1,
-          limit: 500,
-          sort: "createdAt",
-          direction: "DESC",
-          search: {},
-        },
+  } = useQuery<
+    GetAllBoardArticlesByAdminResponse,
+    GetAllBoardArticlesByAdminVariables
+  >(GET_ALL_BOARD_ARTICLES_BY_ADMIN, {
+    fetchPolicy: "cache-and-network",
+    variables: {
+      input: {
+        page: 1,
+        limit: 500,
+        sort: "createdAt",
+        direction: Direction.DESC,
+        search: {},
       },
-      notifyOnNetworkStatusChange: true,
     },
-  );
-  const [updateBoardArticleByAdmin, { loading: updateArticleLoading }] = useMutation<
-    UpdateBoardArticleByAdminResponse,
-    UpdateBoardArticleByAdminVariables
-  >(UPDATE_BOARD_ARTICLES_BY_ADMIN);
-  const [removeBoardArticleByAdmin, { loading: removeArticleLoading }] = useMutation(
-    REMOVE_BOARD_ARTICLES_BY_ADMIN,
-  );
+    notifyOnNetworkStatusChange: true,
+  });
+  const [updateBoardArticleByAdmin, { loading: updateArticleLoading }] =
+    useMutation<
+      UpdateBoardArticleByAdminResponse,
+      UpdateBoardArticleByAdminVariables
+    >(UPDATE_BOARD_ARTICLES_BY_ADMIN);
+  const [removeBoardArticleByAdmin, { loading: removeArticleLoading }] =
+    useMutation(REMOVE_BOARD_ARTICLES_BY_ADMIN);
   const [likeTargetBoardArticle, { loading: likeArticleLoading }] = useMutation(
     LIKE_TARGET_BOARD_ARTICLE,
   );
@@ -188,16 +204,15 @@ const AdminArticleDetailPage: NextPage = () => {
     CreateCommentResponse,
     CreateCommentVariables
   >(CREATE_COMMENT);
-  const [likeTargetComment, { loading: likeCommentLoading }] = useMutation(
-    LIKE_TARGET_COMMENT,
-  );
+  const [likeTargetComment, { loading: likeCommentLoading }] =
+    useMutation(LIKE_TARGET_COMMENT);
 
   const commentsInput = React.useMemo<CommentsInquiry>(
     () => ({
       page: 1,
       limit: 100,
       sort: "createdAt",
-      direction: "DESC",
+      direction: Direction.DESC,
       search: { commentRefId: articleId || "" },
     }),
     [articleId],
@@ -215,11 +230,15 @@ const AdminArticleDetailPage: NextPage = () => {
   });
 
   const article = React.useMemo(
-    () => (getArticlesData?.getAllBoardArticlesByAdmin?.list ?? []).find((it) => it._id === articleId),
+    () =>
+      (getArticlesData?.getAllBoardArticlesByAdmin?.list ?? []).find(
+        (it) => it._id === articleId,
+      ),
     [articleId, getArticlesData],
   );
   const comments = (getCommentsData?.getComments?.list ?? []).filter(
-    (comment) => comment.commentGroup === CommentGroup.ARTICLE && !comment.parentCommentId,
+    (comment) =>
+      comment.commentGroup === CommentGroup.ARTICLE && !comment.parentCommentId,
   );
 
   const onChangeStatus = async (next: BoardArticleStatus) => {
@@ -356,7 +375,15 @@ const AdminArticleDetailPage: NextPage = () => {
 
   if (!articleId || getArticlesLoading) {
     return (
-      <Stack sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", minHeight: "70vh" }}>
+      <Stack
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "70vh",
+        }}
+      >
         <CircularProgress size={"3rem"} />
       </Stack>
     );
@@ -364,7 +391,14 @@ const AdminArticleDetailPage: NextPage = () => {
 
   if (getArticlesError || !article) {
     return (
-      <Stack sx={{ width: "100%", minHeight: "60vh", justifyContent: "center", alignItems: "center" }}>
+      <Stack
+        sx={{
+          width: "100%",
+          minHeight: "60vh",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <Typography>Failed to load article details.</Typography>
       </Stack>
     );
@@ -376,11 +410,17 @@ const AdminArticleDetailPage: NextPage = () => {
     likeArticleLoading ||
     createCommentLoading ||
     likeCommentLoading;
-  const contentHasImage = /!\[[^\]]*\]\([^)]+\)/.test(article.articleContent || "");
+  const contentHasImage = /!\[[^\]]*\]\([^)]+\)/.test(
+    article.articleContent || "",
+  );
   const articleImage = toAbsoluteMediaUrl(article.articleImage);
-  const coverImage = articleImage || (!contentHasImage ? getFallbackImage(article.articleCategory) : "");
+  const coverImage =
+    articleImage ||
+    (!contentHasImage ? getFallbackImage(article.articleCategory) : "");
   const authorName = article.memberData?.memberNick || "Unknown";
-  const authorImage = toAbsoluteMediaUrl(article.memberData?.memberImage) || "/img/defaultUser.svg";
+  const authorImage =
+    toAbsoluteMediaUrl(article.memberData?.memberImage) ||
+    "/img/defaultUser.svg";
 
   return (
     <div id="community-detail-page">
@@ -420,13 +460,18 @@ const AdminArticleDetailPage: NextPage = () => {
               <Select
                 label="Status"
                 value={article.articleStatus}
-                onChange={(event) => onChangeStatus(event.target.value as BoardArticleStatus)}
+                onChange={(event) =>
+                  onChangeStatus(event.target.value as BoardArticleStatus)
+                }
               >
                 <MenuItem value={BoardArticleStatus.ACTIVE}>ACTIVE</MenuItem>
                 <MenuItem value={BoardArticleStatus.DELETE}>DELETE</MenuItem>
               </Select>
             </FormControl>
-            <Button variant="outlined" onClick={() => router.push("/_admin/articles")}>
+            <Button
+              variant="outlined"
+              onClick={() => router.push("/_admin/articles")}
+            >
               Back
             </Button>
           </Stack>
@@ -435,16 +480,22 @@ const AdminArticleDetailPage: NextPage = () => {
             <Chip
               label={getCategoryLabel(article.articleCategory)}
               className="category-badge"
-              sx={{ backgroundColor: getCategoryColor(article.articleCategory) }}
+              sx={{
+                backgroundColor: getCategoryColor(article.articleCategory),
+              }}
             />
-            <Typography className="article-title">{article.articleTitle}</Typography>
+            <Typography className="article-title">
+              {article.articleTitle}
+            </Typography>
 
             <Stack className="article-meta">
               <Stack className="author-info">
                 <Avatar src={authorImage} className="author-avatar" />
                 <Stack>
                   <Typography className="author-name">{authorName}</Typography>
-                  <Typography className="article-date">{formatDate(article.createdAt)}</Typography>
+                  <Typography className="article-date">
+                    {formatDate(article.createdAt)}
+                  </Typography>
                 </Stack>
               </Stack>
 
@@ -455,7 +506,13 @@ const AdminArticleDetailPage: NextPage = () => {
                 </Stack>
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   <IconButton onClick={handleLikeArticle} sx={{ p: 0.2 }}>
-                    {liked ? <FavoriteIcon sx={{ color: "#ef4444", fontSize: "1rem" }} /> : <FavoriteBorderIcon fontSize="small" />}
+                    {liked ? (
+                      <FavoriteIcon
+                        sx={{ color: "#ef4444", fontSize: "1rem" }}
+                      />
+                    ) : (
+                      <FavoriteBorderIcon fontSize="small" />
+                    )}
                   </IconButton>
                   <Typography>{article.articleLikes}</Typography>
                 </Stack>
@@ -474,7 +531,9 @@ const AdminArticleDetailPage: NextPage = () => {
           )}
 
           <Box className="article-content">
-            <ToastViewerComponent markdown={normalizeMarkdownForView(article.articleContent || "")} />
+            <ToastViewerComponent
+              markdown={normalizeMarkdownForView(article.articleContent || "")}
+            />
           </Box>
 
           <Stack className="comments-section">
@@ -484,10 +543,14 @@ const AdminArticleDetailPage: NextPage = () => {
 
             <Stack className="comments-list">
               {getCommentsLoading && <CircularProgress size={"1.5rem"} />}
-              {getCommentsError && <Typography>Failed to load comments.</Typography>}
-              {!getCommentsLoading && !getCommentsError && comments.length === 0 && (
-                <Typography>No comments yet.</Typography>
+              {getCommentsError && (
+                <Typography>Failed to load comments.</Typography>
               )}
+              {!getCommentsLoading &&
+                !getCommentsError &&
+                comments.length === 0 && (
+                  <Typography>No comments yet.</Typography>
+                )}
 
               {!getCommentsLoading &&
                 !getCommentsError &&
@@ -495,16 +558,25 @@ const AdminArticleDetailPage: NextPage = () => {
                   <Stack key={comment._id} className="comment-item">
                     <Stack className="comment-header">
                       <Avatar
-                        src={toAbsoluteMediaUrl(comment.memberData?.memberImage) || "/img/defaultUser.svg"}
+                        src={
+                          toAbsoluteMediaUrl(comment.memberData?.memberImage) ||
+                          "/img/defaultUser.svg"
+                        }
                         className="comment-avatar"
                       />
                       <Stack className="comment-info">
-                        <Typography className="comment-author">{comment.memberData?.memberNick || "Unknown"}</Typography>
-                        <Typography className="comment-date">{formatDate(comment.createdAt)}</Typography>
+                        <Typography className="comment-author">
+                          {comment.memberData?.memberNick || "Unknown"}
+                        </Typography>
+                        <Typography className="comment-date">
+                          {formatDate(comment.createdAt)}
+                        </Typography>
                       </Stack>
                     </Stack>
 
-                    <Typography className="comment-content">{comment.commentContent}</Typography>
+                    <Typography className="comment-content">
+                      {comment.commentContent}
+                    </Typography>
 
                     <Stack className="comment-actions-bar">
                       <Button
@@ -533,7 +605,13 @@ const AdminArticleDetailPage: NextPage = () => {
 
                     {showReplyBox[comment._id] && (
                       <Stack className="reply-box">
-                        <Avatar src={toAbsoluteMediaUrl(user?.memberImage) || "/img/defaultUser.svg"} className="reply-avatar" />
+                        <Avatar
+                          src={
+                            toAbsoluteMediaUrl(user?.memberImage) ||
+                            "/img/defaultUser.svg"
+                          }
+                          className="reply-avatar"
+                        />
                         <TextField
                           multiline
                           rows={2}
@@ -567,16 +645,26 @@ const AdminArticleDetailPage: NextPage = () => {
                           <Stack key={reply._id} className="reply-item">
                             <Stack className="reply-header">
                               <Avatar
-                                src={toAbsoluteMediaUrl(reply.memberData?.memberImage) || "/img/defaultUser.svg"}
+                                src={
+                                  toAbsoluteMediaUrl(
+                                    reply.memberData?.memberImage,
+                                  ) || "/img/defaultUser.svg"
+                                }
                                 className="reply-avatar-small"
                               />
                               <Stack className="reply-info">
-                                <Typography className="reply-author">{reply.memberData?.memberNick || "Unknown"}</Typography>
-                                <Typography className="reply-date">{formatDate(reply.createdAt)}</Typography>
+                                <Typography className="reply-author">
+                                  {reply.memberData?.memberNick || "Unknown"}
+                                </Typography>
+                                <Typography className="reply-date">
+                                  {formatDate(reply.createdAt)}
+                                </Typography>
                               </Stack>
                             </Stack>
 
-                            <Typography className="reply-content">{reply.commentContent}</Typography>
+                            <Typography className="reply-content">
+                              {reply.commentContent}
+                            </Typography>
 
                             <Stack className="reply-actions-bar">
                               <Button
@@ -603,7 +691,13 @@ const AdminArticleDetailPage: NextPage = () => {
             </Stack>
 
             <Stack className="write-comment">
-              <Avatar src={toAbsoluteMediaUrl(user?.memberImage) || "/img/defaultUser.svg"} className="comment-avatar" />
+              <Avatar
+                src={
+                  toAbsoluteMediaUrl(user?.memberImage) ||
+                  "/img/defaultUser.svg"
+                }
+                className="comment-avatar"
+              />
               <TextField
                 multiline
                 rows={3}
@@ -626,7 +720,6 @@ const AdminArticleDetailPage: NextPage = () => {
               </Button>
             </Stack>
           </Stack>
-
         </Stack>
       </Stack>
     </div>
