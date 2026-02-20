@@ -577,6 +577,15 @@ export const DoctorDetailPage: NextPage = () => {
     });
   };
 
+  const handleBookAppointment = async () => {
+    if (!actorId) {
+      await sweetErrorHandling(new Error(Messages.error2));
+      return;
+    }
+    if (!doctor?._id) return;
+    await router.push(`/payment?id=${doctor._id}`);
+  };
+
   const toggleMemberFollow = async (
     targetId: string,
     targetType: string | undefined,
@@ -1116,7 +1125,7 @@ export const DoctorDetailPage: NextPage = () => {
                 variant="contained"
                 fullWidth
                 className="book-btn"
-                onClick={() => router.push(`/payment?id=${doctor._id}`)}
+                onClick={handleBookAppointment}
               >
                 {t("doctor.detail.bookFor", "Book Appointment for")} ${doctor.consultationFee}
               </Button>

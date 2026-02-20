@@ -77,6 +77,16 @@ const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
     }
   };
 
+  const bookNowHandler = async () => {
+    try {
+      if (!user._id) throw new Error(Messages.error2);
+      await router.push(`/payment?id=${doctor._id}`);
+    } catch (err: any) {
+      console.log("ERROR, bookNowHandler:", err.message);
+      sweetErrorHandling(err).then();
+    }
+  };
+
   return (
     <Stack className="doctor-card-config">
       <Stack className="doctor-card-left">
@@ -147,7 +157,7 @@ const DoctorCard = ({ doctor, refetch, query }: DoctorCardProps) => {
           <Button
             className="book-now-btn"
             variant="contained"
-            onClick={() => router.push(`/payment?id=${doctor._id}`)}
+            onClick={bookNowHandler}
           >
             Book Now
           </Button>
