@@ -5,6 +5,7 @@ import BrowseBySpecialization from "@/libs/components/homepage/Filter";
 import TopRatedDoctors from "@/libs/components/homepage/TopDoctors";
 import HealthTips from "@/libs/components/homepage/HealthTips";
 import TrustSecurity from "@/libs/components/homepage/TrustSecurity";
+import PublicChatWidget from "@/libs/components/homepage/PublicChatWidget";
 import withLayoutMain from "@/libs/components/layout/LayoutMember";
 import useDeviceDetect from "@/libs/hooks/useDeviceDetect";
 import { Stack } from "@mui/material";
@@ -30,6 +31,7 @@ const Home: NextPage = () => {
         <HealthTips />
         <TrustSecurity />
         <Events />
+        <PublicChatWidget />
       </Stack>
     );
   } else {
@@ -43,6 +45,7 @@ const Home: NextPage = () => {
         <HealthTips />
         <TrustSecurity />
         <Events />
+        <PublicChatWidget />
       </Stack>
     );
   }
