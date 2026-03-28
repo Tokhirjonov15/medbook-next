@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useReactiveVar } from "@apollo/client";
+import { useMutation, useReactiveVar } from "@apollo/client";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
+import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { CircularProgress, IconButton, Stack } from "@mui/material";
 import { useRouter } from "next/router";
+import { ASK_AI_CHAT } from "@/apollo/user/mutation";
 import { userVar } from "@/apollo/store";
 import { getJwtToken } from "@/libs/auth";
-import { sweetLoginConfirmAlert } from "@/libs/sweetAlert";
+import { MemberType } from "@/libs/enums/member.enum";
+import { sweetErrorAlert, sweetLoginConfirmAlert } from "@/libs/sweetAlert";
 import { Messages } from "@/libs/config";
 
 type ChatSender = {
@@ -30,6 +33,12 @@ type SocketResponse =
   | { event: "message"; _id?: string; text: string; memberData: ChatSender | null; createdAt?: string }
   | { event: "info"; totalClient?: number }
   | { event: "error"; message?: string };
+
+type AiChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+};
 
 const getSocketUrl = (token?: string): string => {
   const explicitWsUrl =
@@ -61,12 +70,22 @@ const PublicChatWidget = () => {
   const listRef = useRef<HTMLDivElement | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCommunityOpen, setIsCommunityOpen] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageText, setMessageText] = useState("");
+  const [aiMessages, setAiMessages] = useState<AiChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      text: "Hello. I am MedBook AI assistant. Ask a general health question and I will help with safe guidance.",
+    },
+  ]);
+  const [aiMessageText, setAiMessageText] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [bottomOffset, setBottomOffset] = useState(24);
+  const [askAiChat, { loading: isAiLoading }] = useMutation(ASK_AI_CHAT);
 
   const isLoggedIn = Boolean(user?._id);
   const socketUrl = useMemo(() => getSocketUrl(getJwtToken()), [isLoggedIn]);
@@ -95,7 +114,7 @@ const PublicChatWidget = () => {
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isCommunityOpen) return;
 
     setIsConnecting(true);
     setIsConnected(false);
@@ -142,14 +161,19 @@ const PublicChatWidget = () => {
       setIsConnecting(false);
       setIsConnected(false);
     };
-  }, [isOpen, socketUrl]);
+  }, [isCommunityOpen, socketUrl]);
 
   useEffect(() => {
-    if (!isOpen || !listRef.current) return;
+    if (!isCommunityOpen || !listRef.current) return;
     listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages, isOpen]);
+  }, [messages, isCommunityOpen]);
 
-  const handleSubmit = async () => {
+  useEffect(() => {
+    if (!isAiOpen || !listRef.current) return;
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [aiMessages, isAiOpen]);
+
+  const handleCommunitySubmit = async () => {
     const text = messageText.trim();
     if (!text) return;
 
@@ -171,16 +195,91 @@ const PublicChatWidget = () => {
     setMessageText("");
   };
 
+  const ensurePatientAccess = async (): Promise<boolean> => {
+    if (!isLoggedIn) {
+      const shouldLogin = await sweetLoginConfirmAlert(Messages.error2);
+      if (shouldLogin) router.push("/auth/login");
+      return false;
+    }
+
+    if (user?.memberType !== MemberType.PATIENT) {
+      await sweetErrorAlert("AI chat is available for patient accounts only.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAiLauncher = async () => {
+    const allowed = await ensurePatientAccess();
+    if (!allowed) return;
+
+    setIsCommunityOpen(false);
+    setIsAiOpen((prev) => !prev);
+  };
+
+  const handleAiSubmit = async () => {
+    const text = aiMessageText.trim();
+    if (!text || isAiLoading) return;
+
+    const allowed = await ensurePatientAccess();
+    if (!allowed) return;
+
+    const userMessage: AiChatMessage = {
+      id: `${Date.now()}-user`,
+      role: "user",
+      text,
+    };
+
+    setAiMessages((prev) => [...prev, userMessage]);
+    setAiMessageText("");
+
+    try {
+      const { data } = await askAiChat({
+        variables: {
+          input: {
+            message: text,
+          },
+        },
+      });
+
+      const reply = data?.askAiChat?.reply?.trim?.() || "I am unable to respond right now. Please try again.";
+
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-assistant`,
+          role: "assistant",
+          text: reply,
+        },
+      ]);
+    } catch (error: any) {
+      const errorMessage =
+        error?.graphQLErrors?.[0]?.message ??
+        error?.message ??
+        "AI chat is temporarily unavailable. Please try again.";
+
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-assistant-error`,
+          role: "assistant",
+          text: errorMessage,
+        },
+      ]);
+    }
+  };
+
   return (
     <div className="public-chat-widget" style={{ bottom: `${bottomOffset}px` }}>
-      {isOpen ? (
+      {isCommunityOpen ? (
         <Stack className="public-chat-panel">
           <Stack className="public-chat-header" direction="row" justifyContent="space-between" alignItems="center">
             <div>
               <strong>Community Chat</strong>
               <span>{isConnected ? "Live now" : isConnecting ? "Connecting..." : "Read-only preview"}</span>
             </div>
-            <IconButton onClick={() => setIsOpen(false)}>
+            <IconButton onClick={() => setIsCommunityOpen(false)}>
               <CloseRoundedIcon />
             </IconButton>
           </Stack>
@@ -215,27 +314,87 @@ const PublicChatWidget = () => {
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
-                  void handleSubmit();
+                  void handleCommunitySubmit();
                 }
               }}
               placeholder={isLoggedIn ? "Write your message..." : "Login to send a message"}
             />
-            <button type="button" onClick={() => void handleSubmit()}>
+            <button type="button" onClick={() => void handleCommunitySubmit()}>
               {isConnecting ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : <SendRoundedIcon />}
             </button>
           </Stack>
         </Stack>
       ) : null}
 
-      <button
-        type="button"
-        className="public-chat-launcher"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-label="Open public chat"
-      >
-        <ForumRoundedIcon />
-        <span>Chat</span>
-      </button>
+      {isAiOpen ? (
+        <Stack className="public-chat-panel ai-chat-panel">
+          <Stack className="public-chat-header ai-chat-header" direction="row" justifyContent="space-between" alignItems="center">
+            <div>
+              <strong>AI Chat</strong>
+              <span>Private health guidance for patients</span>
+            </div>
+            <IconButton onClick={() => setIsAiOpen(false)}>
+              <CloseRoundedIcon />
+            </IconButton>
+          </Stack>
+
+          <div className="public-chat-messages ai-chat-messages" ref={listRef}>
+            {aiMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`public-chat-message ai-chat-message ${message.role === "user" ? "mine" : "assistant"}`.trim()}
+              >
+                <div className="public-chat-message-meta">
+                  <strong>{message.role === "user" ? user?.memberNick || "You" : "MedBook AI"}</strong>
+                </div>
+                <p>{message.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <Stack className="public-chat-composer ai-chat-composer" direction="row" spacing={1}>
+            <input
+              value={aiMessageText}
+              onChange={(event) => setAiMessageText(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  void handleAiSubmit();
+                }
+              }}
+              placeholder="Ask a health question..."
+            />
+            <button type="button" onClick={() => void handleAiSubmit()}>
+              {isAiLoading ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : <SendRoundedIcon />}
+            </button>
+          </Stack>
+        </Stack>
+      ) : null}
+
+      <div className="public-chat-launchers">
+        <button
+          type="button"
+          className="public-chat-launcher ai-launcher"
+          onClick={() => void handleAiLauncher()}
+          aria-label="Open AI chat"
+        >
+          <SmartToyRoundedIcon />
+          <span>AI Chat</span>
+        </button>
+
+        <button
+          type="button"
+          className="public-chat-launcher"
+          onClick={() => {
+            setIsAiOpen(false);
+            setIsCommunityOpen((prev) => !prev);
+          }}
+          aria-label="Open public chat"
+        >
+          <ForumRoundedIcon />
+          <span>Chat</span>
+        </button>
+      </div>
     </div>
   );
 };

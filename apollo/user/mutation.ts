@@ -67,6 +67,14 @@ export const FORGOT_PASSWORD = gql`
   }
 `;
 
+export const ASK_AI_CHAT = gql`
+  mutation AskAiChat($input: AiChatInput!) {
+    askAiChat(input: $input) {
+      reply
+    }
+  }
+`;
+
 export const UPDATE_MEMBER = gql`
   mutation UpdateMember($input: MemberUpdate!) {
     updateMember(input: $input) {
