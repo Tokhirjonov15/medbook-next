@@ -50,7 +50,8 @@ const getSocketUrl = (token?: string): string => {
 
   const baseUrl = explicitWsUrl || graphqlUrl.replace(/\/graphql\/?$/, "");
   const normalizedUrl = baseUrl.replace(/^http/, "ws");
-  return token ? `${normalizedUrl}?token=${encodeURIComponent(token)}` : normalizedUrl;
+  const publicChatUrl = `${normalizedUrl}/public-chat`;
+  return token ? `${publicChatUrl}?token=${encodeURIComponent(token)}` : publicChatUrl;
 };
 
 const formatTime = (value?: string) => {
